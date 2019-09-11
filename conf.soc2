@@ -1,0 +1,72 @@
+# psql -d template1 -U postgres 
+# template1=# CREATE USER soc2 WITH PASSWORD 'dbpassword'; 
+# template1=# CREATE DATABASE soc2;
+# template1=# GRANT ALL PRIVILEGES ON DATABASE soc2 to soc2;
+# \q
+# verify listen_address='*' in postgresql.conf
+# add this to pg_hba.conf:
+#   host    all             all              0.0.0.0/0                       md5
+
+############################################################################
+## MAIN OPTIONS
+############################################################################
+
+######################################
+## Supply PostgreSQL connection details
+######################################
+dbhost = pg_server.domain.com
+db = soc2
+dbuser = soc2
+dbpass = dbpassword
+port = 5432
+
+######################################
+## Log Output from the perl script
+## Can get pretty large and verbose especially with --debug
+######################################
+logfile = /path/to/soc2_server_audit/soc2.log
+
+######################################
+## This is where ansible should have placed it's outputs
+## For both Lynis and AIDE software
+## NOTE: THESE PATHS NEED TO MATCH YOUR CUSTOM PATHS
+## DEFINED IN:
+## lynis/lynis_fetch_report_playbook.yml
+## aide/aide_fetch_report_playbook.yml
+######################################
+lynis_reports_path=/path/to/lynis
+aide_reports_path=/path/to/aide
+
+
+
+############################################################################
+## EMAIL OPTIONS
+############################################################################
+
+
+######################################
+## Supply a custom subject tag for the email alert
+######################################
+subject_seed = Server Audit
+
+######################################
+## Configure the "from" email address
+######################################
+fromemail = no-reply@domain.com
+
+######################################
+## List of email addresses who want to get the "SUGGESTIONS"
+######################################
+erroremaillist = it-person@domain.com
+
+######################################
+## List of email addresses who want to get the "NON-SUGGESTIONS"
+######################################
+successemaillist = helpdesk@domain.com
+
+######################################
+## A SINGLE email address to always email
+######################################
+alwaysemail = manager@domain.com
+
+

@@ -1,0 +1,110 @@
+---
+
+# ansible-playbook lynis_fetch_report_playbook.yml -i ../hosts --limit testing
+# ansible-playbook lynis_fetch_report_playbook.yml -i ../hosts --limit centos
+# ansible-playbook lynis_fetch_report_playbook.yml -i ../hosts --limit ubuntu
+# ansible-playbook lynis_fetch_report_playbook.yml -i ../hosts
+
+- hosts: all
+  remote_user: ma
+  become_method: sudo
+  vars:
+    lynis_report_file: /tmp/lynis-soc2-report.txt
+    lynis_report_local_destination: /path/to/lynis
+  tasks:
+  - name: register Hostname
+    shell: echo {{inventory_hostname | regex_replace('\.','_')}}
+    register: this_host
+
+  - name: NEWER MACHINE, INSTALL GIT 
+    package:
+      name: git
+      state: present
+    when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version|int > 6) or ansible_distribution == 'Ubuntu'
+
+  - name: NEWER MACHINE, CLONE REPO 1 
+    stat: path=/usr/local/lynis
+    register: lynisgit
+
+  - name: NEWER MACHINE, CLONE REPO 2 (permissions) 
+    become: yes
+    file:
+      path: /usr/local/lynis
+      state: directory
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+    ignore_errors: yes
+    when: lynisgit.stat.isdir is not defined and ((ansible_distribution == 'CentOS' and ansible_distribution_major_version|int > 6) or ansible_distribution == 'Ubuntu')
+
+  - name: NEWER MACHINE, CLONE REPO 3 (git clone)
+    when: lynisgit.stat.isdir is not defined and ((ansible_distribution == 'CentOS' and ansible_distribution_major_version|int > 6) or ansible_distribution == 'Ubuntu')
+    shell: cd /usr/local && git clone https://github.com/CISOfy/lynis.git
+
+  - name: NEWER MACHINE, CLONE REPO 4 (permissions) 
+    become: yes
+    file:
+      path: /usr/local/lynis
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      recurse: yes
+    when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version|int > 6) or ansible_distribution == 'Ubuntu'
+
+  - name: NEWER MACHINE, CLONE REPO 5 (git fetch && pull)
+    shell: cd /usr/local/lynis && git reset --hard && git fetch && git pull
+    when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version|int > 6) or ansible_distribution == 'Ubuntu'
+
+  - name: NEWER MACHINE, RUN LYNIS 1 (chown root)
+    become: yes
+    file:
+      path: /usr/local/lynis
+      owner: root
+      group: root
+      recurse: yes
+    when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version|int > 6) or ansible_distribution == 'Ubuntu'
+
+  - name: NEWER MACHINE, RUN LYNIS 2 (rm old report)
+    become: yes
+    file:
+      path: "{{lynis_report_file}}"
+      state: absent
+
+  - name: NEWER MACHINE, RUN LYNIS 3
+    shell: cd /usr/local/lynis && nice -n19 ./lynis --report-file {{lynis_report_file}} audit system
+    when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version|int > 6) or ansible_distribution == 'Ubuntu'
+
+  - name: OLDER MACHINE, INSTALL LYNIS FROM PKG 1 (rm /usr/local/lynis/ on older machines)
+    become: yes
+    file:
+      path: /usr/local/lynis
+      state: absent
+    # REMOVE WHEN CLAUSE IF NEED NEWER MACHINES TO ALWAYS RUN FROM HEAD.
+    when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int < 7 
+
+  - name: OLDER MACHINE, INSTALL LYNIS FROM PKG 2
+    become: yes
+    package:
+      name: lynis
+      state: present
+    when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int < 7
+
+  - name: OLDER MACHINE, RUN LYNIS
+    become: true
+    shell: nice -n19 /usr/bin/lynis --report-file {{lynis_report_file}} audit system
+    when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int < 7
+
+  - name: COPY REPORT 1
+    become: yes
+    fetch:
+      src: "{{ lynis_report_file }}"
+      dest: "{{ lynis_report_local_destination }}/for_humans/{{ host }}"
+
+  - name: COPY REPORT 2
+    become: yes
+    shell: cat {{lynis_report_file}}
+    register: lynis_result
+
+  - name: COPY REPORT 3
+    become: yes
+    local_action: copy content={{ lynis_result.stdout_lines }} dest={{lynis_report_local_destination}}/{{ host }}.{{ this_host.stdout_lines | regex_replace('[\[\]"]','') | regex_replace("[']",'') | regex_replace("^u",'') }}.txt
+
+...

@@ -1,0 +1,23 @@
+# NOTE, if an IP address changes for a host with a DNS name (ie., server.domain.com)
+# you can run "ssh-keygen -R <hostname>" to remove thos host keys:
+# i.e. ssh-keygen -R server.domain.com
+# Then manually run ansible or manually ssh.
+# i.e. ansible-playbook aide_fetch_report_playbook.yml -i ../hosts --limit server.domain.com
+# i.e. or: ssh ma@server.domain.com
+
+[soc2:children]
+centos
+ubuntu
+dynamic
+
+[ubuntu]
+server1.domain.com host=server1
+server2.domain.com host=server2 ansible_port=7822
+server3.domain.com host=server3 ansible_port=22
+
+[centos]
+server4.domain.com host=server4
+
+[dynamic]
+1.2.3.4 host=server5
+1.2.3.5 host=server6

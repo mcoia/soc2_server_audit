@@ -1,0 +1,6 @@
+[soc2:children]
+dockerguests
+
+# necessary because of an Ansible bug: https://github.com/ansible/ansible/issues/23754
+[dockerguests]
+server7.domain.com host=server7 ansible_port=22

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+lynis_reports_path="/path/to/lynis"
+aide_reports_path="/path/to/aide"
+
+rm -Rf "$lynis_reports_path"/*
+rm -Rf "$aide_reports_path"/*
+
+cd /path/to/here/soc2_server_audit/lynis
+ansible-playbook lynis_fetch_report_playbook.yml -i ../hosts  -v
+ansible-playbook lynis_fetch_report_playbook.yml -i ../dockerguests  -v
+
+cd /path/to/here/soc2_server_audit/aide
+ansible-playbook aide_fetch_report_playbook.yml -i ../hosts  -v
+ansible-playbook aide_fetch_report_playbook.yml -i ../dockerguests  -v
+
+cd ../
+./soc2.pl --config conf.soc2

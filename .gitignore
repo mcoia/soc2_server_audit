@@ -5,3 +5,4 @@ aide/conf.aide
 queries.sql
 run_soc2
 ansible_vars.yml
+soc2.log

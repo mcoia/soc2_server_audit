@@ -1,42 +1,26 @@
 #!/usr/bin/perl
-# sudo apt-get install liblocal-lib-perl
-# sudo apt-get install cpanminus
-# sudo apt-get install build-essential software-properties-common libyaz-dev libpq-dev libexpat1-dev
-# sudo cpanm -n DateTime
-# perl -MDateTime -le'print $INC{"DateTime.pm"};'
-# sudo cpanm -n MARC::Record
-# sudo cpanm -n MARC::File
-# sudo cpanm -n MARC::File::XML
-# sudo cpanm -n ZOOM
-# sudo cpanm -n Bundle::DBI
-# sudo cpanm -n DBD::Pg
-# sudo cpanm -n pQuery
-# sudo cpanm -n Email
-# sudo cpanm -n Email::MIME
-# sudo cpanm -n Email::Stuffer
-# sudo cpanm -n Net::FTP
-# sudo cpanm -n LWP::Simple
-# sudo cpanm -n String::Multibyte
-# sudo cpanm -n DateTime::Format::Duration
-# sudo cpanm -n Digest::SHA1
-# sudo cpanm -n XML::Parser
-# sudo cpanm -n XML::Simple
-# cd ~/repos && git clone git://git.evergreen-ils.org/Evergreen.git
-# THEN COPY SOME MODULES TO ~ma/repos:  DBhandler.pm, Loghandler.pm, Mobiusutil.pm, email.pm
+# ---------------------------------------------------------------
+# Copyright © 2019 MOBIUS
+# Blake Graham-Henderson <blake@mobiusconsortium.org>
+# Ted Peterson <ted@mobiusconsortium.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# ---------------------------------------------------------------
+
 
 use strict;
 use warnings;
-use v5.10;
 use lib qw(../);
-use MARC::Record;
-use MARC::File;
-use MARC::File::XML (BinaryEncoding => 'utf8');
-use File::Path qw(make_path remove_tree);
 use Loghandler;
-{
-    no warnings;
-    use DBhandler;
-}
+use DBhandler;
 use Mobiusutil;
 use Data::Dumper;
 use email;
@@ -44,18 +28,12 @@ use DateTime;
 use utf8;
 use Encode;
 use DateTime;
-use LWP::Simple;
-#use OpenILS::Application::AppUtils;
 use DateTime::Format::Duration;
-use Digest::SHA1;
-use XML::Simple;
-use Unicode::Normalize;
 use Getopt::Long;
 use JSON;
 
 
 my $configFile = $ARGV[0];
-# my $xmlconf = "/openils/conf/opensrf.xml";
 our $debug=0;
 our $reportonly=0;
 our $reset=0;

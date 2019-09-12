@@ -31,7 +31,7 @@
 # ansible-playbook aide_fetch_report_playbook.yml -i ../hosts
 
 - hosts: all
-  remote_user: ma
+  remote_user: "{{ remote_user }}"
   become_method: sudo
   vars_files:
     - ../ansible_vars.yml

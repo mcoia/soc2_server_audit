@@ -33,11 +33,8 @@
 - hosts: all
   remote_user: ma
   become_method: sudo
-  vars:
-    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
-    aide: /var/lib/aide
-    aide_report_file: /tmp/aide-soc2-report.txt
-    aide_report_local_destination: "/path/to/aide"
+  vars_files:
+    - ../ansible_vars.yml
   tasks:
   - name: register Hostname
     shell: echo {{inventory_hostname | regex_replace('\.','_')}}

@@ -1,0 +1,6 @@
+conf.soc2
+hosts
+dockerguests
+aide/conf.aide
+queries.sql
+run_soc2

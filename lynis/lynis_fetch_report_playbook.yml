@@ -6,11 +6,10 @@
 # ansible-playbook lynis_fetch_report_playbook.yml -i ../hosts
 
 - hosts: all
-  remote_user: ma
+  remote_user: "{{remote_user}}"
   become_method: sudo
-  vars:
-    lynis_report_file: /tmp/lynis-soc2-report.txt
-    lynis_report_local_destination: /path/to/lynis
+  vars_files:
+    - ../ansible_vars.yml
   tasks:
   - name: register Hostname
     shell: echo {{inventory_hostname | regex_replace('\.','_')}}

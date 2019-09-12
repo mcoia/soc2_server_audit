@@ -1,0 +1,8 @@
+---
+  lynis_report_local_destination: /path/to/lynis
+  aide_report_local_destination: "/path/to/aide"
+  date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+  aide: /var/lib/aide
+  aide_report_file: /tmp/aide-soc2-report.txt
+  lynis_report_file: /tmp/lynis-soc2-report.txt
+...

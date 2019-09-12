@@ -49,6 +49,9 @@ our $lynis_reports_path;
 our $aide_reports_path;
 our $mobUtil = new Mobiusutil();
 our $dateString = "";
+our $dt;
+our $fdate;
+our $ftime;
 
 GetOptions (
 "config=s" => \$configFile,
@@ -96,9 +99,9 @@ our %reportFunctions = (
 
 	if ($conf{"logfile"})
 	{
-		my $dt = DateTime->now(time_zone => "local"); 
-		my $fdate = $dt->ymd;
-		my $ftime = $dt->hms;
+		$dt = DateTime->now(time_zone => "local");
+		$fdate = $dt->ymd;
+		$ftime = $dt->hms;
 		$dateString = "$fdate $ftime";
 		$log = new Loghandler($conf->{"logfile"});
 		$log->truncFile("");
@@ -157,7 +160,7 @@ our %reportFunctions = (
             
 			elsif($jobid == -1)
 			{
-                $jobid = getPrevJobID();
+                $jobid = @{getPrevJobID()}[0];
                 print "Sorry, there is only one job in the database and two are required for reports\n" if(!$jobid);
                 exit if(!$jobid);
 			}
@@ -176,9 +179,11 @@ our %reportFunctions = (
 
 sub runReports
 {
-    my $lastID = getPrevJobID();
+    my @lastJob = @{getPrevJobID()};
+    my $lastID = @lastJob[0];
     if( $lastID && ($lastID != -1) ) ## There was a previous job (catching the case where this is the FIRST job ever)
     {
+        my $lastDate = @lastJob[1];
         updateJob("Executing reports and email","");
         my %serverDictionary = ();
         my $importantReportName = "Servers Appearance / Disappearance";
@@ -454,6 +459,7 @@ sub runReports
             }
         }
         $mainEmailBody = "NO DIFFERENCES" if(length($mainEmailBody) == 0); ## Catching the case when nothing changed, but we should report that too!
+        $mainEmailBody = boxText("Comparing $fdate to $lastDate","#", "|", 1) . $mainEmailBody;
         my @tolist = ($conf{"alwaysemail"});
         my $email = new email($conf{"fromemail"},\@tolist,1,1,\%conf);
         my $displayjobid = $jobid;
@@ -467,6 +473,7 @@ sub runReports
         {
             $email = new email($conf{"fromemail"},\@tolist,1,0,\%conf);
             $subject = "SUGGESTIONS: $subject";
+            $suggestionEmailBody = boxText("Comparing $fdate to $lastDate","#", "|", 1) . $suggestionEmailBody;
             $email->send($subject,$suggestionEmailBody.$queriesRan);
             print "$subject\n\n$suggestionEmailBody" if $debug;
         }
@@ -964,7 +971,6 @@ sub figureServerName
     my @ret = ();
     my @r = split(/\//,$filename);
     $filename = pop @r;
-    # $VAR1 = 'ksl-db1.35_232_113_228.txt'
     if($filename =~ m/(.+)\.(.+)\.txt/)
     {
     
@@ -976,7 +982,7 @@ sub figureServerName
     }
     else
     {
-        say "figureServerName CANNOT MATCH ON THE FILENAME: $filename";
+        print "figureServerName CANNOT MATCH ON THE FILENAME: $filename";
     }
     $log->addLine("figureServerName: \@ret=\n".Dumper(@ret)) if $debug;
     return \@ret;
@@ -1042,16 +1048,22 @@ sub getReportID
 
 sub getPrevJobID
 {
-    my $ret = -1;
+    my @ret = ();
     my $query = "select max(id) from soc2.job where id != $jobid";
     my @results = @{$dbHandler->query($query)};
     foreach(@results)
     {
         my $row = $_;
         my @row = @{$row};
-        $ret = $row[0];
+        push @ret, $row[0];
+        # now get the rundate
+        $query = "select start_time::date from soc2.job where id = " . $row[0];
+        my @result = @{$dbHandler->query($query)};
+        $row = @result[0];
+        @row = @{$row};
+        push @ret, $row[0];
     }
-    return $ret;
+    return \@ret;
 }
 
 sub dirtrav

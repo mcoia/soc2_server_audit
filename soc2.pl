@@ -61,7 +61,7 @@ GetOptions (
 "debug" => \$debug
 )
 or die("Error in command line arguments\nYou can specify
---config configfilename                       [Path to the config file - required]             
+--config configfilename                       [Path to the config file - required]
 --debug flag                                  [Cause more logging output]
 --reset flag                                  [Empty out the schema table]
 --reportonly flag                             [Skip everything and only run a report - Reports are always run at the end]
@@ -70,8 +70,8 @@ or die("Error in command line arguments\nYou can specify
 
  if(!$configFile)
  {
-	print "Please specify a config file\n";
-	exit;
+    print "Please specify a config file\n";
+    exit;
  }
 
 my $conf = $mobUtil->readConfFile($configFile);
@@ -88,47 +88,47 @@ our %reportFunctions = (
 'lynis' => 'consumeLynis',
 'aide' => 'consumeAIDE'
 );
-  
+
  if($conf)
  {
-	%conf = %{$conf};
-	
-	# $soc2_reports_path = $conf{"soc2_reports_path"};
-	$lynis_reports_path = $conf{"lynis_reports_path"};
-	$aide_reports_path = $conf{"aide_reports_path"};
+    %conf = %{$conf};
 
-	if ($conf{"logfile"})
-	{
-		$dt = DateTime->now(time_zone => "local");
-		$fdate = $dt->ymd;
-		$ftime = $dt->hms;
-		$dateString = "$fdate $ftime";
-		$log = new Loghandler($conf->{"logfile"});
-		$log->truncFile("");
-		$log->addLogLine(" ---------------- Script Starting ---------------- ");
-		print "Executing job  tail the log for information (".$conf{"logfile"}.")\n";
-		my @reqs = ("logfile", "dbhost","db","dbuser","dbpass","port"); 
-		my $valid = 1;
-		my $errorMessage="";
-		for my $i (0..$#reqs)
-		{
-			if(!$conf{$reqs[$i]})
-			{
-				$log->addLogLine("Required configuration missing from conf file");
-				$log->addLogLine($reqs[$i]." required");
-				$valid = 0;
-			}
-		}
-		if($valid)
-		{	
-			my %dbconf;
+    # $soc2_reports_path = $conf{"soc2_reports_path"};
+    $lynis_reports_path = $conf{"lynis_reports_path"};
+    $aide_reports_path = $conf{"aide_reports_path"};
+
+    if ($conf{"logfile"})
+    {
+        $dt = DateTime->now(time_zone => "local");
+        $fdate = $dt->ymd;
+        $ftime = $dt->hms;
+        $dateString = "$fdate $ftime";
+        $log = new Loghandler($conf->{"logfile"});
+        $log->truncFile("");
+        $log->addLogLine(" ---------------- Script Starting ---------------- ");
+        print "Executing job  tail the log for information (".$conf{"logfile"}.")\n";
+        my @reqs = ("logfile", "dbhost","db","dbuser","dbpass","port");
+        my $valid = 1;
+        my $errorMessage="";
+        for my $i (0..$#reqs)
+        {
+            if(!$conf{$reqs[$i]})
+            {
+                $log->addLogLine("Required configuration missing from conf file");
+                $log->addLogLine($reqs[$i]." required");
+                $valid = 0;
+            }
+        }
+        if($valid)
+        {
+            my %dbconf;
             $dbconf{'db'} = $conf{"db"};
             $dbconf{'dbhost'} = $conf{"dbhost"};
             $dbconf{'dbuser'} = $conf{"dbuser"};
             $dbconf{'dbpass'} = $conf{"dbpass"};
             $dbconf{'port'} = $conf{"port"};
 
-			$dbHandler = new DBhandler($dbconf{"db"},$dbconf{"dbhost"},$dbconf{"dbuser"},$dbconf{"dbpass"},$dbconf{"port"});
+            $dbHandler = new DBhandler($dbconf{"db"},$dbconf{"dbhost"},$dbconf{"dbuser"},$dbconf{"dbpass"},$dbconf{"port"});
 
             setupSchema($dbHandler);
 
@@ -157,24 +157,24 @@ our %reportFunctions = (
                     }
                 }
             }
-            
-			elsif($jobid == -1)
-			{
+
+            elsif($jobid == -1)
+            {
                 $jobid = @{getPrevJobID()}[0];
                 print "Sorry, there is only one job in the database and two are required for reports\n" if(!$jobid);
                 exit if(!$jobid);
-			}
+            }
 
             my $reportOutput = runReports();
 
-			updateJob("Completed","");
-		}
-		$log->addLogLine(" ---------------- Script Ending ---------------- ");
-	}
-	else
-	{
-		print "Config file does not define 'logfile'\n";		
-	}
+            updateJob("Completed","");
+        }
+        $log->addLogLine(" ---------------- Script Ending ---------------- ");
+    }
+    else
+    {
+        print "Config file does not define 'logfile'\n";
+    }
  }
 
 sub runReports
@@ -216,7 +216,7 @@ sub runReports
         soc2.report sr
         where
         ss.id=sr.sid and
-        sr.job = $lastID 
+        sr.job = $lastID
         group by 1,2
         ) as last_job on this_job.server_id = last_job.server_id
         where
@@ -245,8 +245,8 @@ sub runReports
             push ($serverDictionary{$importantReportName}{$importantReportName}{"notherenow"}, $itemsBefore) if(length($itemsBefore) > 0);
             $queriesRan .= "\n\n$reportName\n$query";
         }
-        
-        
+
+
         #################################
         #
         # Key presence
@@ -263,7 +263,7 @@ sub runReports
         soc2.report sr
         where
         ss.id=sr.sid and
-        sr.job = $jobid 
+        sr.job = $jobid
         ) as this_job full join
         (
         select ss.id as server_id,ss.name,sr.key as key
@@ -272,7 +272,7 @@ sub runReports
         soc2.report sr
         where
         ss.id=sr.sid and
-        sr.job = $lastID 
+        sr.job = $lastID
         ) as last_job on this_job.server_id = last_job.server_id and this_job.key = last_job.key
         where
         last_job.server_id is null or
@@ -312,7 +312,7 @@ sub runReports
             }
             $queriesRan .= "\n\n$reportName\n$query";
         }
-        
+
         #################################
         #
         # Changed Value
@@ -333,7 +333,7 @@ sub runReports
         sr.key !~* 'kernel_ent' and
         sr.key !~* 'journal_meta_data' and
         sr.key !~* 'journal_oldest_bootdate' and
-        sr.job = $jobid 
+        sr.job = $jobid
         ) as this_job full join
         (
         select ss.id as server_id,ss.name,sr.key as key,sr.value as \"value\"
@@ -389,7 +389,7 @@ sub runReports
         where
         ss.id=sr.sid and
         sr.key ~* 'suggestion' and
-        sr.job = $jobid 
+        sr.job = $jobid
         order by 2,3
         ";
         updateJob("Running query",$query);
@@ -413,7 +413,7 @@ sub runReports
             }
             $queriesRan .= "\n\n$reportName\n$query";
         }
- 
+
         ## alphabatize the servers
         my @serverOrder = ();
         push (@serverOrder, $_) foreach (keys %serverDictionary);
@@ -515,7 +515,7 @@ sub boxText
     my $ret = "";
     my $totalLength = length($text) + (length($vChar)*2) + ($padding *2) + 2;
     my $heightPadding = ($padding / 2 < 1) ? 1 : $padding / 2;
-    
+
     # Draw the first line
     my $i = 0;
     while($i < $totalLength)
@@ -538,7 +538,7 @@ sub boxText
         $ret.="$vChar\n";
         $i++;
     }
-    
+
     # data line
     $ret.="$vChar";
     $i = -1;
@@ -577,7 +577,7 @@ sub boxText
         $i++;
     }
     $ret.="\n";
-    
+
 }
 
 sub consumeLynis
@@ -591,7 +591,7 @@ sub consumeLynis
 
     my $serverid = makeServer($short, $long);
     my $reportid = storeRAW(\@lines,$rtype) if $storeRAW;
-   
+
     $log->addLine("
         consumeLynis
         file: $file
@@ -658,7 +658,7 @@ sub consumeAIDE
 
     my $serverid = makeServer($short, $long);
     my $reportid = storeRAW(\@lines, $rtype) if $storeRAW;
-    
+
     $log->addLine("
         consumeAIDE
         file: $file
@@ -680,7 +680,7 @@ sub consumeAIDE
     my $keyPos = 0;
     my $i = 0;
     my $insertPOS = 1;
-    
+
     while( $lines[$i]  )
     {
         my $line = $lines[$i];
@@ -702,7 +702,7 @@ sub consumeAIDE
                     $additionalKey =~ s/^\s+|\s+$//g;
                     my $value;
                     foreach my $j(0..$#s)
-                    {   
+                    {
                         $value .= $s[$j] if $j != $keyPos;
                     }
                     $value =~ s/^\s+|\s+$//g;
@@ -713,10 +713,10 @@ sub consumeAIDE
                     push (@insertValues,($reportid,$serverid,$key,$value,$jobid))
                 }
             }
-            
+
         }
         else
-        {   
+        {
             if( (lc($line) =~ m/summary\:/g ) && !$sectionsUsed{"summary"} ) ## Summary section
             {
                 $log->addLine("INTERESTED: summary");
@@ -792,7 +792,7 @@ sub createKeyName
             my @ch = @{nonEmptyValues('|',$value)};
             $log->addLine("$#ch Pipes: value = $value") if $debug;
             my $hasEqualSigns = 0;
-            
+
             foreach(@ch)
             {
                 $hasEqualSigns = 1 if($_ =~ /=/);
@@ -801,7 +801,7 @@ sub createKeyName
             if($hasEqualSigns)   ## Handle the case where the subvalues use equal signs
             {
                 $log->addLine("Found equal signs") if $debug;
-                ## nginx config looks like this 
+                ## nginx config looks like this
                 ## nginx_config[]=|file=/etc/nginx/sites-enabled/osrf-ws-http-proxy|depth=2|tree=/server/location|number=2|setting=proxy_set_header|value=X-Real-IP $remote_addr|
                 if($key =~ /nginx_config/)
                 {
@@ -973,7 +973,7 @@ sub figureServerName
     $filename = pop @r;
     if($filename =~ m/(.+)\.(.+)\.txt/)
     {
-    
+
         my $domainname = "$2";
         my $shortname = "$1";
         $shortname = "$1" if ($shortname =~ m/([^\/]+)$/);
@@ -1092,45 +1092,45 @@ sub dirtrav
 
 sub setupSchema
 {
-	my $query = "DROP SCHEMA soc2 CASCADE";
-	$dbHandler->update($query) if($reset);
-	$query = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'soc2'";
-	my @results = @{$dbHandler->query($query)};
-	if($#results==-1)
-	{
-		$query = "CREATE SCHEMA soc2";
-		$dbHandler->update($query);
+    my $query = "DROP SCHEMA soc2 CASCADE";
+    $dbHandler->update($query) if($reset);
+    $query = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'soc2'";
+    my @results = @{$dbHandler->query($query)};
+    if($#results==-1)
+    {
+        $query = "CREATE SCHEMA soc2";
+        $dbHandler->update($query);
 
-		$query = "CREATE TABLE soc2.server(
-		id bigserial NOT NULL,
+        $query = "CREATE TABLE soc2.server(
+        id bigserial NOT NULL,
         name text DEFAULT ''::text,
         fqdn_or_ip text DEFAULT ''::text,
         CONSTRAINT server_pkey PRIMARY KEY (id)
-		)";		
-		$dbHandler->update($query);
+        )";
+        $dbHandler->update($query);
 
-		$query = "CREATE TABLE soc2.job
-		(
-		id bigserial NOT NULL,
-		start_time timestamp with time zone NOT NULL DEFAULT now(),
-		last_update_time timestamp with time zone NOT NULL DEFAULT now(),
-		status text default 'processing',	
-		current_action text,
-		current_action_num bigint default 0,
+        $query = "CREATE TABLE soc2.job
+        (
+        id bigserial NOT NULL,
+        start_time timestamp with time zone NOT NULL DEFAULT now(),
+        last_update_time timestamp with time zone NOT NULL DEFAULT now(),
+        status text default 'processing',
+        current_action text,
+        current_action_num bigint default 0,
         CONSTRAINT job_pkey PRIMARY KEY (id)
-		  )";		  
-		$dbHandler->update($query);
+          )";
+        $dbHandler->update($query);
 
-		$query = "CREATE TABLE soc2.report_raw(
-		id bigserial NOT NULL,
+        $query = "CREATE TABLE soc2.report_raw(
+        id bigserial NOT NULL,
         report_type text DEFAULT ''::text,
-		file text DEFAULT ''::text,
-		job bigint NOT NULL,
+        file text DEFAULT ''::text,
+        job bigint NOT NULL,
         create_date timestamp NOT NULL DEFAULT now(),
         CONSTRAINT report_raw_pkey PRIMARY KEY (id),
         foreign key (job) references soc2.job(id) ON DELETE CASCADE
-		)";		
-		$dbHandler->update($query);
+        )";
+        $dbHandler->update($query);
 
         $query = "CREATE TABLE soc2.report(
         id bigserial NOT NULL,
@@ -1144,39 +1144,39 @@ sub setupSchema
         foreign key (rid) references soc2.report_raw(id) ON DELETE CASCADE,
         foreign key (sid) references soc2.server(id) ON DELETE CASCADE
         )";
-		$dbHandler->update($query);		
-	}
+        $dbHandler->update($query);
+    }
 }
 
 sub createNewJob
 {
-	my $status = $_[0];
-	my $query = "INSERT INTO soc2.job(status) values('$status')";
-	my $results = $dbHandler->update($query);
-	if($results)
-	{
-		$query = "SELECT max( ID ) FROM soc2.job";
-		my @results = @{$dbHandler->query($query)};
-		foreach(@results)
-		{
-			my $row = $_;
-			my @row = @{$row};
-			$jobid = $row[0];
-			return $jobid;
-		}
-	}
-	return -1;
+    my $status = $_[0];
+    my $query = "INSERT INTO soc2.job(status) values('$status')";
+    my $results = $dbHandler->update($query);
+    if($results)
+    {
+        $query = "SELECT max( ID ) FROM soc2.job";
+        my @results = @{$dbHandler->query($query)};
+        foreach(@results)
+        {
+            my $row = $_;
+            my @row = @{$row};
+            $jobid = $row[0];
+            return $jobid;
+        }
+    }
+    return -1;
 }
 
 sub updateJob
 {
-	my $status = $_[0];
-	my $action = $_[1];
-	$log->addLine($action);
-	my $query = "UPDATE soc2.job SET last_update_time=now(),status=\$\$$status\$\$, CURRENT_ACTION_NUM = CURRENT_ACTION_NUM+1,current_action=\$1 where id=$jobid";
+    my $status = $_[0];
+    my $action = $_[1];
+    $log->addLine($action);
+    my $query = "UPDATE soc2.job SET last_update_time=now(),status=\$\$$status\$\$, CURRENT_ACTION_NUM = CURRENT_ACTION_NUM+1,current_action=\$1 where id=$jobid";
     my @values = ($action);
-	my $results = $dbHandler->updateWithParameters($query,\@values);
-	return $results;
+    my $results = $dbHandler->updateWithParameters($query,\@values);
+    return $results;
 }
 
  exit;

@@ -163,7 +163,7 @@ cd ../
 There are many options you can pass to the perl script. The default is --config.
 Lifted from the script:
 
-```perl
+```
 --config configfilename                       [Path to the config file - required]             
 --debug flag                                  [Cause more logging output]
 --reset flag                                  [Empty out the schema table]

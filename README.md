@@ -101,7 +101,7 @@ aide_reports_path=/path/to/aide
 Be sure and supply the linux username that each of the servers has configured with the key pair
 
 ```
-remote_user: /path/to/lynis
+remote_user: linux_sudo_user
 ```
 
 You need only edit the path to where you want the outputs to go:

@@ -98,16 +98,19 @@ aide_reports_path=/path/to/aide
 
 ### EDIT FILE ansible_vars.yml
 
+Be sure and supply the linux username that each of the servers has configured with the key pair
+
+```
+remote_user: /path/to/lynis
+```
+
 You need only edit the path to where you want the outputs to go:
 
 ```
 lynis_report_local_destination: /path/to/lynis
 and
 aide_report_local_destination: "/path/to/aide"
-
 ```
-
-Respectively
 
 NOTE: These paths need to match the paths from conf.soc2
 

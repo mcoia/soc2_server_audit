@@ -2,6 +2,8 @@
 
 ## Main Idea
 
+This software can help with a SOC 2 Type 2 server audit on an ongoing basis.
+
 These are the main tenants:
 
 1. Automated server health checks and differencing. 
@@ -38,6 +40,7 @@ The server that this runs on will need at a minimum:
 
 - Decide on a place to have the software run
 - Clone this project
+- Copy the example files to real files for editing
 - Install PostgreSQL somewhere (same machine is fine)
 - Edit these files:
   - conf.soc2
@@ -49,6 +52,19 @@ The server that this runs on will need at a minimum:
   - aide/conf.aide (optional)
 
 NOTE: Each file is detailed below
+
+Copy the example files
+
+```
+cd /path/to/repo
+cp run_soc2.example run_soc2
+cp conf.soc2.example conf.soc2
+cp ansible_vars.yml.example ansible_vars.yml
+cp dockerguests.example dockerguests
+cp hosts.example hosts
+cp aide/conf.aide.example aide/conf.aide
+
+```
   
 ### PostgreSQL
 

@@ -45,9 +45,8 @@ The server that this runs on will need at a minimum:
 - Edit these files:
   - conf.soc2
   - hosts
-  - aide/aide_fetch_report_playbook.yml
-  - lynis/lynis_fetch_report_playbook.yml
   - run_soc2
+  - ansible_vars.yml
   - dockerguests (optional)
   - aide/conf.aide (optional)
 
@@ -97,7 +96,7 @@ lynis_reports_path=/path/to/lynis
 aide_reports_path=/path/to/aide
 ```
 
-### EDIT FILE aide_fetch_report_playbook.yml / lynis_fetch_report_playbook.yml
+### EDIT FILE ansible_vars.yml
 
 You need only edit the path to where you want the outputs to go:
 
@@ -130,9 +129,11 @@ NOTE: These lines in particular
 
 
  ***lynis_reports_path="/path/to/lynis"***
+ 
  ***aide_reports_path="/path/to/aide"***
 
  ***cd /path/to/here/soc2_server_audit/lynis***
+ 
  ***cd /path/to/here/soc2_server_audit/aide***
 
 

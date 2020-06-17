@@ -255,7 +255,7 @@ sub runReports
         $reportName = "Presence";
         # Make sure All of the same keys are here this time
         $query = "
-        select *
+        select distinct *
         from
         (select ss.id as server_id,ss.name,sr.key as key
         from
@@ -280,11 +280,11 @@ sub runReports
         order by 2,3,5,6
         ";
         updateJob("Running query",$query);
+        my @results = @{$dbHandler->query($query)};
         if ($#results > -1)
         {
             my $itemsBefore = "";
             my $itemsNow = "";
-            my @results = @{$dbHandler->query($query)};
             foreach(@results)
             {
                 my @row = @{$_};
@@ -320,7 +320,7 @@ sub runReports
         #################################
         $reportName = "Changed Values";
         $query = "
-        select *
+        select distinct *
         from
         (select ss.id as server_id,ss.name,sr.key as key,sr.value as \"value\"
         from
@@ -355,11 +355,11 @@ sub runReports
         order by 2,3,5,6
         ";
         updateJob("Running query",$query);
+        my @results = @{$dbHandler->query($query)};
         if ($#results > -1)
         {
             my $itemsBefore = "";
             my $itemsNow = "";
-            my @results = @{$dbHandler->query($query)};
             foreach(@results)
             {
                 my @row = @{$_};
@@ -393,11 +393,11 @@ sub runReports
         order by 2,3
         ";
         updateJob("Running query",$query);
+        my @results = @{$dbHandler->query($query)};
         if ($#results > -1)
         {
             my $itemsBefore = "";
             my $itemsNow = "";
-            my @results = @{$dbHandler->query($query)};
             foreach(@results)
             {
                 my @row = @{$_};
@@ -1049,7 +1049,7 @@ sub getReportID
 sub getPrevJobID
 {
     my @ret = ();
-    my $query = "select max(id) from soc2.job where id != $jobid";
+    my $query = "select max(id) from soc2.job where id != $jobid and id < $jobid";
     my @results = @{$dbHandler->query($query)};
     foreach(@results)
     {

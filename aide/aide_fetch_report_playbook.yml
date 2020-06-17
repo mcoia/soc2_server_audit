@@ -32,6 +32,7 @@
 
 - hosts: all
   remote_user: "{{ remote_user }}"
+  become: true
   become_method: sudo
   vars_files:
     - ../ansible_vars.yml

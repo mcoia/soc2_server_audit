@@ -7,6 +7,7 @@
 
 - hosts: all
   remote_user: "{{remote_user}}"
+  become: true
   become_method: sudo
   vars_files:
     - ../ansible_vars.yml
@@ -90,6 +91,11 @@
     become: true
     shell: nice -n19 /usr/bin/lynis --report-file {{lynis_report_file}} audit system
     when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int < 7
+
+  - name: OLDER AND NEWER, UPDATE default.prf SKIP-TEST (for next execution).
+    become: true
+    # skip FINT-4316 (checks for Aide DB) since we manage the AIDE DB directly.
+    lineinfile: "dest=/usr/local/lynis/default.prf state=present regexp='skip-test' line='skip-test=FINT-4316' insertafter='# Skip a test'"
 
   - name: COPY REPORT 1
     become: yes

@@ -156,6 +156,7 @@ our %reportFunctions = (
                         eval($exec);
                     }
                 }
+                cleanDB();
             }
 
             elsif($jobid == -1)
@@ -1177,6 +1178,18 @@ sub updateJob
     my @values = ($action);
     my $results = $dbHandler->updateWithParameters($query,\@values);
     return $results;
+}
+
+sub cleanDB
+{
+    my $jobHistory = $conf{"job_history"} || 10;
+    my $highestjobid = @{getPrevJobID()}[0];
+    my $query = "DELETE FROM soc2.report WHERE job < ($highestjobid - $jobHistory)";
+    $log->addLine("Running:\n$query");
+    my $results = $dbHandler->update($query);
+    $query = "DELETE FROM soc2.report_raw WHERE job < ($highestjobid - $jobHistory)";
+    $log->addLine("Running:\n$query");
+    $results = $dbHandler->update($query);
 }
 
  exit;

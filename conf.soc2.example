@@ -21,6 +21,13 @@ dbpass = dbpassword
 port = 5432
 
 ######################################
+## Number of most recent jobs to keep.
+## The rest are rolled out of the 
+## database
+######################################
+job_history = 10
+
+######################################
 ## Log Output from the perl script
 ## Can get pretty large and verbose especially with --debug
 ######################################

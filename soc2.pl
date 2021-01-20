@@ -475,6 +475,7 @@ sub runReports
             $email = new email($conf{"fromemail"},\@tolist,1,0,\%conf);
             $subject = "SUGGESTIONS: $subject";
             $suggestionEmailBody = boxText("Comparing $fdate to $lastDate","#", "|", 1) . $suggestionEmailBody;
+            $log->addLine($subject."\n".$suggestionEmailBody.$queriesRan);
             $email->send($subject,$suggestionEmailBody.$queriesRan);
             print "$subject\n\n$suggestionEmailBody" if $debug;
         }

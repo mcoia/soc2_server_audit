@@ -467,6 +467,7 @@ sub runReports
         $displayjobid = "Report Only" if $reportonly;
         my $subject = makeSubjectName($importantReportName, 50, \@serverOrder);
         $subject = "Job: $displayjobid $dateString $subject";
+        $log->addLine($subject."\n".$mainEmailBody.$queriesRan);
         $email->send($subject,$mainEmailBody.$queriesRan);
         print "$subject\n\n$mainEmailBody" if $debug;
 

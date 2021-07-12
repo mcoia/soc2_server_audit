@@ -461,7 +461,7 @@ sub runReports
         }
         $mainEmailBody = "NO DIFFERENCES" if(length($mainEmailBody) == 0); ## Catching the case when nothing changed, but we should report that too!
         $mainEmailBody = boxText("Comparing $fdate to $lastDate","#", "|", 1) . $mainEmailBody;
-        my @tolist = ($conf{"alwaysemail"});
+        my @tolist = ($conf{"successemaillist"});
         my $email = new email($conf{"fromemail"},\@tolist,1,1,\%conf);
         my $displayjobid = $jobid;
         $displayjobid = "Report Only" if $reportonly;
@@ -473,6 +473,7 @@ sub runReports
 
         if(length($suggestionEmailBody)>0)
         {
+            @tolist = ($conf{"alwaysemail"});
             $email = new email($conf{"fromemail"},\@tolist,1,0,\%conf);
             $subject = "SUGGESTIONS: $subject";
             $suggestionEmailBody = boxText("Comparing $fdate to $lastDate","#", "|", 1) . $suggestionEmailBody;

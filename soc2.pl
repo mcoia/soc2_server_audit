@@ -52,6 +52,7 @@ our $dateString = "";
 our $dt;
 our $fdate;
 our $ftime;
+our @ignores;
 
 GetOptions (
 "config=s" => \$configFile,
@@ -182,6 +183,7 @@ sub runReports
 {
     my @lastJob = @{getPrevJobID()};
     my $lastID = @lastJob[0];
+    @ignores = @{parseIgnores()};
     if( $lastID && ($lastID != -1) ) ## There was a previous job (catching the case where this is the FIRST job ever)
     {
         my $lastDate = @lastJob[1];
@@ -234,7 +236,7 @@ sub runReports
             foreach(@results)
             {
                 my @row = @{$_};
-                $itemsNow.=$row[1]."\n" if( defined($row[1]) && length($row[1]) > 0 ); ## Handle the case where there is a new server compared to last time
+                $itemsNow.=$row[1]."\n" if(defined($row[1]) && length($row[1]) > 0 ); ## Handle the case where there is a new server compared to last time
                 $itemsBefore.=$row[4]."\n" if(defined($row[4])); ## Handle the case where there is a new server compared to last time
             }
             my @s = ();
@@ -302,12 +304,15 @@ sub runReports
                     my $thisServer = $row[1] || $row[4];
                     my $thisValue = $row[2] || $row[5];
                     my $thisType = $row[2] ? "herenow" : "notherenow";
-                    $serverDictionary{$thisServer} = {} if !$serverDictionary{$thisServer};
-                    $serverDictionary{$thisServer}{$reportName} = {} if !$serverDictionary{$thisServer}{$reportName};
-                    my @s = ();
-                    $serverDictionary{$thisServer}{$reportName}{$thisType} = \@s if !$serverDictionary{$thisServer}{$reportName}{$thisType};
-                    push $serverDictionary{$thisServer}{$reportName}{$thisType}, $thisValue;
-                    $log->addLine("$thisServer : $thisType\n" . Dumper($serverDictionary{$thisServer}{$reportName}{$thisType})) if $debug;
+                    if(reportThis($thisValue))
+                    {
+                        $serverDictionary{$thisServer} = {} if !$serverDictionary{$thisServer};
+                        $serverDictionary{$thisServer}{$reportName} = {} if !$serverDictionary{$thisServer}{$reportName};
+                        my @s = ();
+                        $serverDictionary{$thisServer}{$reportName}{$thisType} = \@s if !$serverDictionary{$thisServer}{$reportName}{$thisType};
+                        push $serverDictionary{$thisServer}{$reportName}{$thisType}, $thisValue;
+                        $log->addLine("$thisServer : $thisType\n" . Dumper($serverDictionary{$thisServer}{$reportName}{$thisType})) if $debug;
+                    }
                 }
                 undef $go;
             }
@@ -367,12 +372,15 @@ sub runReports
                 my $thisServer = $row[1];
                 my $thisValue = "  Key: " . $row[2] . "\nBefore/After:\n" . $row[7] . "\n" . $row[3];
                 my $thisType = "changed";
-                $serverDictionary{$thisServer} = {} if !$serverDictionary{$thisServer};
-                $serverDictionary{$thisServer}{$reportName} = {} if !$serverDictionary{$thisServer}{$reportName};
-                my @s = ();
-                $serverDictionary{$thisServer}{$reportName}{$thisType} = \@s if !$serverDictionary{$thisServer}{$reportName}{$thisType};
-                push $serverDictionary{$thisServer}{$reportName}{$thisType}, $thisValue;
-                $log->addLine("$thisServer : $thisType\n" . Dumper($serverDictionary{$thisServer}{$reportName}{$thisType})) if $debug;
+                if(reportThis($row[2] .' '.$row[7] .' '.$row[3]))
+                {
+                    $serverDictionary{$thisServer} = {} if !$serverDictionary{$thisServer};
+                    $serverDictionary{$thisServer}{$reportName} = {} if !$serverDictionary{$thisServer}{$reportName};
+                    my @s = ();
+                    $serverDictionary{$thisServer}{$reportName}{$thisType} = \@s if !$serverDictionary{$thisServer}{$reportName}{$thisType};
+                    push $serverDictionary{$thisServer}{$reportName}{$thisType}, $thisValue;
+                    $log->addLine("$thisServer : $thisType\n" . Dumper($serverDictionary{$thisServer}{$reportName}{$thisType})) if $debug;
+                }
             }
             $queriesRan .= "\n\n$reportName\n$query";
         }
@@ -482,6 +490,44 @@ sub runReports
             print "$subject\n\n$suggestionEmailBody" if $debug;
         }
     }
+}
+
+sub parseIgnores
+{
+    my @ret = ();
+    my $confline = $conf{"report_ignores"};
+    $confline =~s/^\s*//;
+    $confline =~s/\s*$//;
+    @ret = split(/--\|--/, $confline);
+    foreach my $i (0..$#ret)
+    {
+        # Trim starting and ending spaces
+        @ret[$i] =~s/^\s*//;
+        @ret[$i] =~s/\s*$//;
+
+        # Trim starting and ending tabs
+        @ret[$i] =~s/^\t*//;
+        @ret[$i] =~s/\t*$//;
+
+        # Escape regular expression special characters
+        @ret[$i] =~s/\|/\\\|/g;
+        @ret[$i] =~s/\//\\\//g;
+        @ret[$i] =~s/\^/\\\^/g;
+        @ret[$i] =~s/\$/\\\$/g;
+    }
+    return \@ret;
+}
+
+sub reportThis
+{
+    my $thisTest = shift;
+    print "Testing $thisTest\n";
+    foreach(@ignores)
+    {
+        print "Ignoring because match '$_'" if ($thisTest =~ m/$_/gi);
+        return 0 if ($thisTest =~ m/$_/gi);
+    }
+    return 1;
 }
 
 sub makeSubjectName
@@ -1023,7 +1069,6 @@ sub getServerID
     return $ret;
 }
 
-
 sub storeRAW
 {
     my @rawbody = @{$_[0]};
@@ -1053,7 +1098,8 @@ sub getReportID
 sub getPrevJobID
 {
     my @ret = ();
-    my $query = "select max(id) from soc2.job where id != $jobid and id < $jobid";
+    my $query = "select max(id) from soc2.job ";
+    $query .= "where id != $jobid and id < $jobid" if($jobid != -1);
     my @results = @{$dbHandler->query($query)};
     foreach(@results)
     {

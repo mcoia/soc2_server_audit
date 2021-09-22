@@ -45,6 +45,17 @@ lynis_reports_path=/path/to/lynis
 aide_reports_path=/path/to/aide
 
 
+############################################################################
+## REPORT IGNORES
+## A list of phrases that you don't want reported
+## These can be key values or data values.
+## Any phrase provided here will be compared to key values and data values
+## fragments are allowed, if the phrase you provide appears anywhere in
+## the data or the key, the whole key will be dropped from the report
+## The list is --|-- delimited, and spaces are trimmed
+############################################################################
+
+report_ignores = pg_xlog/ --|-- deleted_file_/tmp --|-- journal_disk_size --|-- slow_test_ --|-- tests_executed
 
 ############################################################################
 ## EMAIL OPTIONS

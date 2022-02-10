@@ -18,7 +18,7 @@
 
 use strict;
 use warnings;
-use lib qw(../);
+use lib qw(../ ./);
 use Loghandler;
 use DBhandler;
 use Mobiusutil;
@@ -246,8 +246,10 @@ sub runReports
                 $serverDictionary{$importantReportName}{$importantReportName}{"herenow"} = \@s if ( (!$serverDictionary{$importantReportName}{$importantReportName}{"herenow"}) && (length($itemsNow) > 0) );
                 my @s2 = ();
                 $serverDictionary{$importantReportName}{$importantReportName}{"notherenow"} = \@s2 if ( (!$serverDictionary{$importantReportName}{$importantReportName}{"notherenow"}) && (length($itemsBefore) > 0) );
-                push ($serverDictionary{$importantReportName}{$importantReportName}{"herenow"}, $itemsNow) if(length($itemsNow) > 0);
-                push ($serverDictionary{$importantReportName}{$importantReportName}{"notherenow"}, $itemsBefore) if(length($itemsBefore) > 0);
+
+                %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $importantReportName, $importantReportName, "herenow", $itemsNow)} if(length($itemsNow) > 0);
+                %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $importantReportName, $importantReportName, "notherenow", $itemsBefore)} if(length($itemsBefore) > 0);
+
             }
             $queriesRan .= "\n\n$reportName\n$query";
         }
@@ -313,7 +315,7 @@ sub runReports
                         $serverDictionary{$thisServer}{$reportName} = {} if !$serverDictionary{$thisServer}{$reportName};
                         my @s = ();
                         $serverDictionary{$thisServer}{$reportName}{$thisType} = \@s if !$serverDictionary{$thisServer}{$reportName}{$thisType};
-                        push $serverDictionary{$thisServer}{$reportName}{$thisType}, $thisValue;
+                        %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $thisServer, $reportName, $thisType, $thisValue)};
                         $log->addLine("$thisServer : $thisType\n" . Dumper($serverDictionary{$thisServer}{$reportName}{$thisType})) if $debug;
                     }
                 }
@@ -381,7 +383,7 @@ sub runReports
                     $serverDictionary{$thisServer}{$reportName} = {} if !$serverDictionary{$thisServer}{$reportName};
                     my @s = ();
                     $serverDictionary{$thisServer}{$reportName}{$thisType} = \@s if !$serverDictionary{$thisServer}{$reportName}{$thisType};
-                    push $serverDictionary{$thisServer}{$reportName}{$thisType}, $thisValue;
+                    %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $thisServer, $reportName, $thisType, $thisValue)};
                     $log->addLine("$thisServer : $thisType\n" . Dumper($serverDictionary{$thisServer}{$reportName}{$thisType})) if $debug;
                 }
             }
@@ -420,7 +422,7 @@ sub runReports
                 $serverDictionary{$thisServer}{$reportName} = {} if !$serverDictionary{$thisServer}{$reportName};
                 my @s = ();
                 $serverDictionary{$thisServer}{$reportName}{$thisType} = \@s if !$serverDictionary{$thisServer}{$reportName}{$thisType};
-                push $serverDictionary{$thisServer}{$reportName}{$thisType}, $thisValue;
+                %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $thisServer, $reportName, $thisType, $thisValue)};
                 $log->addLine("$thisServer : $thisType\n" . Dumper($serverDictionary{$thisServer}{$reportName}{$thisType})) if $debug;
             }
             $queriesRan .= "\n\n$reportName\n$query";
@@ -453,9 +455,9 @@ sub runReports
         {
             $mainEmailBody .= "\n\n" . boxText($serverName, "#", "|", 4);
             $suggestionEmailBody .= "\n\n" . boxText($serverName, "#", "|", 4) if($serverName ne $importantReportName);
-            foreach my $rName (keys $serverDictionary{$serverName})
+            foreach my $rName (keys %{$serverDictionary{$serverName}})
             {
-                foreach my $thisType (keys $serverDictionary{$serverName}{$rName})
+                foreach my $thisType (keys %{%{$serverDictionary{$serverName}}{$rName}})
                 {
                     my $english = "";
                     $english = "Dissappeared" if $thisType eq "notherenow";
@@ -493,6 +495,24 @@ sub runReports
             print "$subject\n\n$suggestionEmailBody" if $debug;
         }
     }
+}
+
+sub pushValueIntoBuriedArray
+{
+    my $dictionaryRef = shift;
+    my $key1 = shift;
+    my $key2 = shift;
+    my $key3 = shift;
+    my $value = shift;
+    my %dictionary = %{$dictionaryRef};
+    my %t = %{$dictionary{$key1}};
+    my %tt = %{$t{$key2}};
+    my @ar = @{$tt{$key3}};
+    push @ar, $value;
+    $tt{$key3} = \@ar;
+    $t{$key2} = \%tt;
+    $dictionary{$key1} = \%t;
+    return \%dictionary;
 }
 
 sub parseIgnores

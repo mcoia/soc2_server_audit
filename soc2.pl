@@ -239,18 +239,15 @@ sub runReports
                 $itemsNow.=$row[1]."\n" if(defined($row[1]) && length($row[1]) > 0 ); ## Handle the case where there is a new server compared to last time
                 $itemsBefore.=$row[4]."\n" if(defined($row[4])); ## Handle the case where there is a new server compared to last time
             }
+            my @s = ();
+            $serverDictionary{$importantReportName}{$importantReportName}{"herenow"} = \@s if ( (!$serverDictionary{"Servers Appearance / Disappearance"}{"Servers Appearance / Disappearance"}{"herenow"}) && (length($itemsNow) > 0) );
+            my @s2 = ();
+            $serverDictionary{$importantReportName}{$importantReportName}{"notherenow"} = \@s2 if ( (!$serverDictionary{"Servers Appearance / Disappearance"}{"Servers Appearance / Disappearance"}{"herenow"}) && (length($itemsBefore) > 0) );
             $wholeServerChanges = "" . $itemsNow . $itemsBefore;
-            if(reportThis($wholeServerChanges))
-            {
-                my @s = ();
-                $serverDictionary{$importantReportName}{$importantReportName}{"herenow"} = \@s if ( (!$serverDictionary{$importantReportName}{$importantReportName}{"herenow"}) && (length($itemsNow) > 0) );
-                my @s2 = ();
-                $serverDictionary{$importantReportName}{$importantReportName}{"notherenow"} = \@s2 if ( (!$serverDictionary{$importantReportName}{$importantReportName}{"notherenow"}) && (length($itemsBefore) > 0) );
 
-                %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $importantReportName, $importantReportName, "herenow", $itemsNow)} if(length($itemsNow) > 0);
-                %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $importantReportName, $importantReportName, "notherenow", $itemsBefore)} if(length($itemsBefore) > 0);
+            %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $importantReportName, $importantReportName, "herenow", $itemsNow)} if(length($itemsNow) > 0);
+            %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $importantReportName, $importantReportName, "notherenow", $itemsBefore)} if(length($itemsBefore) > 0);
 
-            }
             $queriesRan .= "\n\n$reportName\n$query";
         }
 

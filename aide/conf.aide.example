@@ -113,8 +113,8 @@ MYRULE =  p+n+u+g+s+m+c+xattrs+md5+sha1
 
 # EXCEPTIONS
 !/etc/aide.conf
-!/proc   # ignore /proc filesystem
-!/sys    # ignore /sys filesystem
+!/proc
+!/sys
 !/var/log/*
 !/usr/src
 !/usr/tmp

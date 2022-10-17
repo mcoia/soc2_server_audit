@@ -136,14 +136,14 @@
 
   - name: RUN AIDE CENTOS
     become: true
-    shell: nice -n19 /usr/sbin/aide --compare -r "file://{{aide_report_file}}"
+    shell: nice -n19 /usr/sbin/aide --compare > {{aide_report_file}}
     register: command_result
     failed_when: command_result.rc != 0 and command_result.rc != 7 and command_result.rc != 4
     when: ansible_distribution == 'CentOS' and ran_before.matched == 1
 
   - name: RUN AIDE UBUNTU
     become: true
-    shell: nice -n19 /usr/bin/aide --compare -r "file://{{aide_report_file}}" -c /etc/aide.conf
+    shell: nice -n19 /usr/bin/aide --compare -c /etc/aide.conf > {{aide_report_file}}
     register: command_result
     ignore_errors: yes
     when: ansible_distribution == 'Ubuntu' and ran_before.matched == 1

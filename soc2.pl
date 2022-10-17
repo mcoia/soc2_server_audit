@@ -541,7 +541,7 @@ sub parseIgnores
 sub reportThis
 {
     my $thisTest = shift;
-    print "Testing $thisTest\n";
+    # print "Testing $thisTest\n";
     foreach(@ignores)
     {
         print "Ignoring because match '$_'" if ($thisTest =~ m/$_/gi);

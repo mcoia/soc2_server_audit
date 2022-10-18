@@ -83,11 +83,28 @@
   - name: Pausing for FS to finish
     pause: seconds=1
 
+  - name: register AIDE Version to test.txt
+    shell: "{{ aide_exec_path }} --version &> ~/test.txt
+    args:
+      executable: /bin/bash
+    environment:
+      PATH: "{{ ansible_env.PATH }}"
+
+  - name: Pausing for FS to finish, test.txt isn't ready for reading
+    pause: seconds=1
+
   - name: register AIDE Version
-    shell: "{{ aide_exec_path }} --version &> ~/test.txt || grep -i aide ~/test.txt || rm ~/test.txt &> /dev/null || true"
+    shell: grep -i aide ~/test.txt
     environment:
       PATH: "{{ ansible_env.PATH }}"
     register: aide_version
+
+  - name: Deleting test file ~/test.txt
+    ignore_errors: yes
+    become: yes
+    file:
+      path: "~/test.txt"
+      state: absent
 
   - debug:
       var: aide_version.stdout_lines

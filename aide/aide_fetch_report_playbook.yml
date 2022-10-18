@@ -74,6 +74,8 @@
       var: aide_exec_path
 
   - name: register AIDE Version
+    ignore_errors: yes
+    become: yes
     shell: "{{ aide_exec_path }} --version | grep -i aide"
     register: aide_version
 

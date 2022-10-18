@@ -84,7 +84,7 @@
     pause: seconds=1
 
   - name: register AIDE Version to test.txt
-    shell: "{{ aide_exec_path }} --version &> ~/test.txt
+    shell: "{{ aide_exec_path }} --version &> ~/test.txt"
     args:
       executable: /bin/bash
     environment:

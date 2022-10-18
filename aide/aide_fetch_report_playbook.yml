@@ -111,7 +111,7 @@
 
   - name: Stripping down to the version number
 # Example data: Aide 0.17.4
-    shell: echo {{ aide_version.stdout_lines[0] | regex_replace('^[^\s]*\s*(.*)$','\1')  }}
+    shell: echo {{ aide_version.stdout_lines[0] | regex_replace('^[^\s]*\s*(.*)$','\1') | regex_replace('[^\d]*','') }}
     register: aide_version_number
 
   - debug:
@@ -166,17 +166,17 @@
   - name: Remove verbose config line
     become: true
     lineinfile: "dest=/etc/aide.conf state=absent regexp='^verbose'"
-    when: aide_version_number.stdout_lines[0] > '0.16.9'
+    when: aide_version_number.stdout_lines[0] > '0169'
 
   - name: Change grouped to report_grouped
     become: true
     lineinfile: "dest=/etc/aide.conf state=present regexp='^#?grouped' line='report_grouped=no'"
-    when: aide_version_number.stdout_lines[0] > '0.16.9'
+    when: aide_version_number.stdout_lines[0] > '0169'
 
   - name: Change summarize_changes to report_summarize_changes config line
     become: true
     lineinfile: "dest=/etc/aide.conf state=present regexp='^summarize_changes' line='report_summarize_changes=yes'"
-    when: aide_version_number.stdout_lines[0] > '0.16.9'
+    when: aide_version_number.stdout_lines[0] > '0169'
 
   - name: INIT AIDE /etc/cron.daily/aide mode=a-x
     become: true

@@ -134,43 +134,6 @@
     ignore_errors: yes
     when: ansible_distribution == 'Ubuntu'
 
-  - name: INIT AIDE
-    become: true
-    shell: nice -n19 {{ aide_exec_path }} -i -c /etc/aide.conf
-    #shell: touch /var/lib/aide/aide.db.new
-    when: ansible_distribution == 'CentOS' 
-
-  - name: INIT AIDE UBUNTU 1
-    become: true
-    file: dest=/etc/cron.daily/aide mode=a-x
-    when: ansible_distribution == 'Ubuntu'
-
-  - name: INIT AIDE UBUNTU 2
-    become: true
-    file: path=/etc/aide mode=a-x state=directory recurse=yes
-    when: ansible_distribution == 'Ubuntu'
-
-  - name: INIT AIDE UBUNTU 3
-    become: true
-    shell: nice -n19 {{ aide_exec_path }} -i -c /etc/aide.conf
-    when: ansible_distribution == 'Ubuntu' 
-
-
-  - name: REMOVE '^database=' LINE
-    become: true
-    lineinfile: "dest=/etc/aide.conf state=absent regexp='^database='"
-   
-  - name: ADD 'database=' LINE
-    become: true
-    lineinfile: "dest=/etc/aide.conf state=present insertbefore='^database' line='database=file:{{ aide }}/aide.db.{{ date }}'"
-
-  - name: CHECK INITIALIZED 
-    become: true
-    find: 
-      path: "{{ aide }}"
-      patterns: "aide.db.2*"
-    register: ran_before
-
   - name: Remove verbose config line
     become: true
     lineinfile: "dest=/etc/aide.conf state=absent regexp='^verbose'"
@@ -186,6 +149,34 @@
     lineinfile: "dest=/etc/aide.conf state=present regexp='^summarize_changes' line='report_summarize_changes=yes'"
     when: aide_version_number.stdout_lines[0] > '0.16.9'
 
+  - name: INIT AIDE /etc/cron.daily/aide mode=a-x
+    become: true
+    file: dest=/etc/cron.daily/aide mode=a-x
+    when: ansible_distribution == 'Ubuntu'
+
+  - name: INIT AIDE path=/etc/aide mode=a-x state=directory recurse=yes
+    become: true
+    file: path=/etc/aide mode=a-x state=directory recurse=yes
+    when: ansible_distribution == 'Ubuntu'
+
+  - name: Execute AIDE
+    become: true
+    shell: nice -n19 {{ aide_exec_path }} -i -c /etc/aide.conf
+
+  - name: REMOVE '^database=' LINE
+    become: true
+    lineinfile: "dest=/etc/aide.conf state=absent regexp='^database='"
+   
+  - name: ADD 'database=' LINE
+    become: true
+    lineinfile: "dest=/etc/aide.conf state=present insertbefore='^database' line='database=file:{{ aide }}/aide.db.{{ date }}'"
+
+  - name: CHECK INITIALIZED 
+    become: true
+    find: 
+      path: "{{ aide }}"
+      patterns: "aide.db.2*"
+    register: ran_before
   - name: RUN AIDE
     become: true
     shell: nice -n19 {{ aide_exec_path }} --compare -c /etc/aide.conf > {{aide_report_file}}

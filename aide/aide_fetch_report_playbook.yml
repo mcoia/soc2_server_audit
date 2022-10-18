@@ -47,6 +47,47 @@
       name: aide
       state: present
 
+## figure out where the aide binary is, and make an ansible variable to it's path
+  - stat: path=/usr/sbin/aide
+    register: aide_sbin
+
+  - stat: path=/usr/bin/aide
+    register: aide_bin
+
+  - debug:
+      var: aide_bin
+
+  - debug:
+      var: aide_sbin
+
+  - name: Make binary variable
+    set_fact:
+      aide_exec_path: /usr/bin/aide
+    when: aide_bin.stat.exists == true
+
+  - name: Make binary variable
+    set_fact:
+      aide_exec_path: /usr/sbin/aide
+    when: aide_sbin.stat.exists == true
+
+  - debug:
+      var: aide_exec_path
+
+  - name: register AIDE Version
+    shell: "{{ aide_exec_path }} --version | grep -i aide"
+    register: aide_version
+
+  - debug:
+      var: aide_version.stdout_lines
+
+  - name: Stripping down to the version number
+# Example data: Aide 0.17.4
+    shell: echo {{ aide_version.stdout_lines[0] | regex_replace('^[^\s]*\s*(.*)$','\1')  }}
+    register: aide_version_number
+
+  - debug:
+      var: aide_version_number.stdout_lines[0]
+
   - name: FIXUP PREV AIDE FILES 1
     ignore_errors: yes
     become: yes
@@ -92,29 +133,28 @@
     lineinfile: "dest=/etc/aide.conf state=present regexp='^#grouped' line='grouped=yes'"
     ignore_errors: yes
     when: ansible_distribution == 'Ubuntu'
-  - name: INIT AIDE CENTOS
+
+  - name: INIT AIDE
     become: true
-    shell: nice -n19 /usr/sbin/aide -i -c /etc/aide.conf
+    shell: nice -n19 {{ aide_exec_path }} -i -c /etc/aide.conf
     #shell: touch /var/lib/aide/aide.db.new
     when: ansible_distribution == 'CentOS' 
 
   - name: INIT AIDE UBUNTU 1
     become: true
     file: dest=/etc/cron.daily/aide mode=a-x
-    when: ansible_distribution == 'Ubuntu' 
+    when: ansible_distribution == 'Ubuntu'
+
   - name: INIT AIDE UBUNTU 2
     become: true
     file: path=/etc/aide mode=a-x state=directory recurse=yes
-    when: ansible_distribution == 'Ubuntu' 
+    when: ansible_distribution == 'Ubuntu'
+
   - name: INIT AIDE UBUNTU 3
     become: true
-    #shell: nice -n19 /usr/sbin/aideinit -f -y -c /etc/aide.conf -d /var/lib/aide/aide.db.new
-    shell: nice -n19 /usr/bin/aide -i -c /etc/aide.conf
+    shell: nice -n19 {{ aide_exec_path }} -i -c /etc/aide.conf
     when: ansible_distribution == 'Ubuntu' 
 
-
-#  - debug:
-#      var: aide_initialized_centos
 
   - name: REMOVE '^database=' LINE
     become: true
@@ -131,20 +171,6 @@
       patterns: "aide.db.2*"
     register: ran_before
 
-  - name: register AIDE Version
-    shell: aide --version | grep -i aide
-    register: aide_version
-  - debug:
-      var: aide_version.stdout_lines
-
-  - name: Stripping down to the version number
-# Example data: Aide 0.17.4
-    shell: echo {{ aide_version.stdout_lines[0] | regex_replace('^[^\s]*\s*(.*)$','\1')  }}
-    register: aide_version_number
-
-  - debug:
-      var: aide_version_number.stdout_lines[0]
-
   - name: Remove verbose config line
     become: true
     lineinfile: "dest=/etc/aide.conf state=absent regexp='^verbose'"
@@ -160,19 +186,12 @@
     lineinfile: "dest=/etc/aide.conf state=present regexp='^summarize_changes' line='report_summarize_changes=yes'"
     when: aide_version_number.stdout_lines[0] > '0.16.9'
 
-  - name: RUN AIDE CENTOS
+  - name: RUN AIDE
     become: true
-    shell: nice -n19 /usr/sbin/aide --compare > {{aide_report_file}}
-    register: command_result
-    failed_when: command_result.rc != 0 and command_result.rc != 7 and command_result.rc != 4
-    when: ansible_distribution == 'CentOS' and ran_before.matched == 1
-
-  - name: RUN AIDE UBUNTU
-    become: true
-    shell: nice -n19 /usr/bin/aide --compare -c /etc/aide.conf > {{aide_report_file}}
+    shell: nice -n19 {{ aide_exec_path }} --compare -c /etc/aide.conf > {{aide_report_file}}
     register: command_result
     ignore_errors: yes
-    when: ansible_distribution == 'Ubuntu' and ran_before.matched == 1
+    when: ran_before.matched == 1
 
   - name: COPY REPORT 1
     become: yes

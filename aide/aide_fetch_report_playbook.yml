@@ -76,7 +76,7 @@
   - name: register AIDE Version
     ignore_errors: yes
     become: yes
-    shell: "{{ aide_exec_path }} --version &> ~/test.txt|grep -i aide ~/test.txt"
+    shell: "{{ aide_exec_path }} --version &> ~/test.txt && grep -i aide ~/test.txt"
     register: aide_version
 
   - debug:

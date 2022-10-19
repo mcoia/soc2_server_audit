@@ -471,6 +471,13 @@ sub runReports
         }
         $mainEmailBody = "NO DIFFERENCES" if(length($mainEmailBody) == 0); ## Catching the case when nothing changed, but we should report that too!
         $mainEmailBody = boxText("Comparing $fdate to $lastDate","#", "|", 1) . $mainEmailBody;
+
+        # Email can fail like this:
+        # "\x{25cf}" does not map to iso-8859-1 at /usr/share/perl5/Email/MIME.pm line 281.
+        # we don't need those characters anyways
+        $mainEmailBody =~ s/[^[:ascii:]]//g;
+        $suggestionEmailBody =~ s/[^[:ascii:]]//g;
+
         my @tolist = ($conf{"successemaillist"});
         my $email = new email($conf{"fromemail"},\@tolist,1,1,\%conf);
         my $displayjobid = $jobid;

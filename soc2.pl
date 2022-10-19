@@ -478,7 +478,7 @@ sub runReports
         $mainEmailBody =~ s/[^[:ascii:]]//g;
         $suggestionEmailBody =~ s/[^[:ascii:]]//g;
 
-        my @tolist = ($conf{"successemaillist"});
+        my @tolist = ($conf{"alwaysemail"});
         my $email = new email($conf{"fromemail"},\@tolist,1,1,\%conf);
         my $displayjobid = $jobid;
         $displayjobid = "Report Only" if $reportonly;
@@ -490,7 +490,6 @@ sub runReports
 
         if(length($suggestionEmailBody)>0)
         {
-            @tolist = ($conf{"alwaysemail"});
             $email = new email($conf{"fromemail"},\@tolist,1,0,\%conf);
             $subject = "SUGGESTIONS: $subject";
             $suggestionEmailBody = boxText("Comparing $fdate to $lastDate","#", "|", 1) . $suggestionEmailBody;

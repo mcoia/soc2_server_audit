@@ -53,52 +53,29 @@ sub new {
 }
 
 sub send  	#subject, body
-{   
-
+{
 	my $self = @_[0];
 	my $subject = @_[1];
 	my $body = @_[2];
 	my $log = $self->{'log'};
-	my $fromEmail = $self->{fromEmailAddress};
 	my @additionalEmails = @{$self->{emailRecipientArray}};
-	my @toEmails = ("From", $fromEmail);
 	my @success = @{$self->{successEmailList}};
 	my @error = @{$self->{errorEmailList}};
+    my @toEmails = ();
 
 	
-	if($self->{'notifyError'})
-	{
-		for my $r (0.. $#error)
-		{
-			push(@toEmails, "To");
-			push(@toEmails, @error[$r]);
-		}
-	}
+	push(@toEmails, @error) if($self->{'notifyError'});
 
-	if($self->{'notifySuccess'})
-	{
-		for my $r (0.. $#success)
-		{
-			push(@toEmails, "To");
-			push(@toEmails, @success[$r]);
-		}
-		
-	}
+    push(@toEmails, @success) if($self->{'notifySuccess'});
 
-	for my $r (0.. $#additionalEmails)
-	{
-#	print "Adding To : ".@additionalEmails[$r]."\n";
-		push(@toEmails, "To");
-		push(@toEmails, @additionalEmails[$r]);
-	}
-	push(@toEmails, "Subject");
-	push(@toEmails, $subject);
-#print Dumper(@toEmails);
-	my $message;
-	
-	$message = Email::MIME->create(
+    push(@toEmails, @additionalEmails) if($#additionalEmails > -1);
+    @toEmails = @{deDupeEmailArray($self, \@toEmails)};
+
+	my $message = Email::MIME->create(
 	  header_str => [
-		@toEmails
+		From => $self->{fromEmailAddress},
+        To => [ @toEmails ],
+        Subject => $subject
 	  ],
 	  attributes => {
 		encoding => 'quoted-printable',
@@ -166,5 +143,42 @@ sub sendWithAttachments  	#subject, body, @attachments
 			$message->send;
 		}
 	}
+}
+
+sub deDupeEmailArray
+{
+    my $self = shift;
+    my $emailArrayRef = shift;
+    my @emailArray = @{$emailArrayRef};
+    my %posTracker = ();
+    my %bareEmails = ();
+    my $pos = 0;
+    my @ret = ();
+    foreach(@emailArray)
+    {
+        my $thisEmail = $_;
+        # if the email address is expressed with a display name, strip it to just the email address
+        $thisEmail =~ s/^[^<]*<([^>]*)>$/$1/g if($thisEmail =~ m/</);
+        # lowercase it
+        $thisEmail = lc $thisEmail;
+        # Trip the spaces
+        $thisEmail =~ s/^\s*//g;
+        $thisEmail =~ s/\s*$//g;
+        $bareEmails{$thisEmail} = 1;
+        if(!$postTracker{$thisEmail})
+        {
+            my @a = ();
+            $postTracker{$thisEmail} = \@a;
+        }
+        push(@{$postTracker{$thisEmail}}, $pos);
+        $pos++;
+    }
+    while ( (my $email, my $value) = each(%bareEmails) )
+    {
+        my @a = @{$postTracker{$email}};
+        # just take the first occurance of the duplicate email
+        push(@ret, @emailArray[ @a[0] ]);
+    }
+    return \@ret;
 }
 1;

@@ -1,13 +1,19 @@
 #!/usr/bin/perl
+# ---------------------------------------------------------------
+# Copyright © 2013-2022 MOBIUS
+# Blake Graham-Henderson blake@mobiusconsortium.org 2013-2022
+# Scott Angel scottangel@mobiusconsoritum.org 2022
 #
-# email.pm
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-# Requires:
-#
-# Mobiusutil.pm
-#
-#
-# Blake Graham-Henderson MOBIUS blake@mobiusconsortium.org 2013-1-24
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# ---------------------------------------------------------------
 package email;
 
 use Email::MIME;
@@ -113,8 +119,7 @@ sub sendWithAttachments    #subject, body, @attachments
     {
         my $message = new Email::Stuffer;
 
-        $message->to($_)->from( $self->{fromEmailAddress} )
-          ->text_body("$body\n")->subject($subject);
+        $message->to($_)->from( $self->{fromEmailAddress} )->text_body("$body\n")->subject($subject);
 
         # attach the files
         $message->attach_file($_) foreach (@attachments);

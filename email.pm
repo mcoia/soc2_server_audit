@@ -21,13 +21,12 @@ use Data::Dumper;
 
 sub new
 {
-    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag,
-        $confArrayRef )
-      = @_;
+    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef ) = @_;
     my @a;
     my @b;
 
-    my $self = {
+    my $self =
+    {
         fromEmailAddress    => $from,
         emailRecipientArray => \@{$emailRecipientArrayRef},
         notifyError         => $errorFlag,                    #true/false

@@ -68,6 +68,8 @@ sub send #subject, body
     push(@toEmails, @success) if ($self->{'notifySuccess'});
 
     push(@toEmails, @additionalEmails) if ($#additionalEmails > -1);
+
+    # Dedupe
     @toEmails = @{deDupeEmailArray($self, \@toEmails)};
 
     my $message = Email::MIME->create(
@@ -95,35 +97,30 @@ sub sendWithAttachments #subject, body, @attachments
     my $subject = @_[1];
     my $body = @_[2];
     my @attachments = @{@_[3]};
-    my $log = $self->{'log'};
-    my $fromEmail = $self->{fromEmailAddress};
     my @additionalEmails = @{$self->{emailRecipientArray}};
     my @success = @{$self->{successEmailList}};
     my @error = @{$self->{errorEmailList}};
     my @toEmails = ();
 
     push(@toEmails, @error) if ($self->{'notifyError'});
+
     push(@toEmails, @success) if ($self->{'notifySuccess'});
-    push(@toEmails, @additionalEmails);
 
+    push(@toEmails, @additionalEmails) if ($#additionalEmails > -1);
+
+    # Dedupe
     @toEmails = @{deDupeEmailArray($self, \@toEmails)};
-
-    my %alreadyEmailed;
 
     foreach (@toEmails)
     {
-        if (!$alreadyEmailed{$_})
-        {
-            $alreadyEmailed{$_} = 1;
-            my $message = new Email::Stuffer;
-            $message->to($_)->from($fromEmail)->text_body("$body\n")
-                ->subject($subject);
-            foreach (@attachments)
-            {
-                $message->attach_file($_);
-            }
-            $message->send;
-        }
+        my $message = new Email::Stuffer;
+
+        $message->to($_)->from( $self->{fromEmailAddress} )->text_body("$body\n")->subject($subject);
+
+        # attach the files
+        $message->attach_file($_) foreach (@attachments);
+
+        $message->send;
     }
 
 }
@@ -148,7 +145,7 @@ sub deDupeEmailArray
         # lowercase it
         $thisEmail = lc $thisEmail;
 
-        # Trip the spaces
+        # Trim the spaces
         $thisEmail =~ s/^\s*//g;
         $thisEmail =~ s/\s*$//g;
         $bareEmails{$thisEmail} = 1;

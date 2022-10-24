@@ -13,10 +13,9 @@ package email;
 use Email::MIME;
 use Data::Dumper;
 
-sub new {
-    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag,
-        $confArrayRef )
-      = @_;
+sub new
+{
+    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef ) = @_;
     my @a;
     my @b;
 
@@ -33,13 +32,15 @@ sub new {
     my %theseemails = %{ $self->{confArray} };
 
     my @emails = split( /,/, @theseemails{"successemaillist"} );
-    for my $y ( 0 .. $#emails ) {
+    for my $y ( 0 .. $#emails )
+    {
         @emails[$y] = trim( $self, @emails[$y] );
     }
     $self->{successEmailList} = \@emails;
 
     my @emails2 = split( /,/, @theseemails{"erroremaillist"} );
-    for my $y ( 0 .. $#emails2 ) {
+    for my $y ( 0 .. $#emails2 )
+    {
         @emails2[$y] = trim( $self, @emails2[$y] );
     }
     $self->{errorEmailList} = \@emails2;
@@ -108,7 +109,8 @@ sub sendWithAttachments    #subject, body, @attachments
     # Dedupe
     @toEmails = @{ deDupeEmailArray( $self, \@toEmails ) };
 
-    foreach (@toEmails) {
+    foreach (@toEmails)
+    {
         my $message = new Email::Stuffer;
 
         $message->to($_)->from( $self->{fromEmailAddress} )
@@ -122,7 +124,8 @@ sub sendWithAttachments    #subject, body, @attachments
 
 }
 
-sub deDupeEmailArray {
+sub deDupeEmailArray
+{
     my $self          = shift;
     my $emailArrayRef = shift;
     my @emailArray    = @{$emailArrayRef};
@@ -131,7 +134,8 @@ sub deDupeEmailArray {
     my $pos           = 0;
     my @ret           = ();
 
-    foreach (@emailArray) {
+    foreach (@emailArray)
+    {
         my $thisEmail = $_;
 
 # if the email address is expressed with a display name, strip it to just the email address
@@ -144,14 +148,16 @@ sub deDupeEmailArray {
         $thisEmail = trim( $self, $thisEmail );
 
         $bareEmails{$thisEmail} = 1;
-        if ( !$postTracker{$thisEmail} ) {
+        if ( !$postTracker{$thisEmail} )
+        {
             my @a = ();
             $postTracker{$thisEmail} = \@a;
         }
         push( @{ $postTracker{$thisEmail} }, $pos );
         $pos++;
     }
-    while ( ( my $email, my $value ) = each(%bareEmails) ) {
+    while ( ( my $email, my $value ) = each(%bareEmails) )
+    {
         my @a = @{ $postTracker{$email} };
 
         # just take the first occurance of the duplicate email
@@ -161,7 +167,8 @@ sub deDupeEmailArray {
     return \@ret;
 }
 
-sub trim {
+sub trim
+{
     my $self   = shift;
     my $string = shift;
     $string =~ s/^\s+//;

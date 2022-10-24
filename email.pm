@@ -113,7 +113,8 @@ sub sendWithAttachments #subject, body, @attachments
     {
         my $message = new Email::Stuffer;
 
-        $message->to($_)->from( $self->{fromEmailAddress} )->text_body("$body\n")->subject($subject);
+        $message->to($_)->from($self->{fromEmailAddress})
+            ->text_body("$body\n")->subject($subject);
 
         # attach the files
         $message->attach_file($_) foreach (@attachments);
@@ -144,7 +145,7 @@ sub deDupeEmailArray
         $thisEmail = lc $thisEmail;
 
         # Trim the spaces
-        $thisEmail =trim($self, $thisEmail);
+        $thisEmail = trim($self, $thisEmail);
 
         $bareEmails{$thisEmail} = 1;
         if (!$postTracker{$thisEmail})

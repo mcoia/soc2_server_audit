@@ -30,6 +30,7 @@ sub new
         errorEmailList      => \@a,
         successEmailList    => \@b
     };
+
     my $mobUtil = new Mobiusutil();
     my %theseemails = %{$self->{confArray}};
 
@@ -81,13 +82,10 @@ sub send #subject, body
         },
         body_str   => "$body\n"
     );
-    my $valid = 1;
 
-    if ($valid)
-    {
-        use Email::Sender::Simple qw(sendmail);
-        sendmail($message);
-    }
+    use Email::Sender::Simple qw(sendmail);
+
+    sendmail($message);
 
 }
 
@@ -100,34 +98,18 @@ sub sendWithAttachments #subject, body, @attachments
     my $log = $self->{'log'};
     my $fromEmail = $self->{fromEmailAddress};
     my @additionalEmails = @{$self->{emailRecipientArray}};
-    my @toEmails = ();
     my @success = @{$self->{successEmailList}};
     my @error = @{$self->{errorEmailList}};
+    my @toEmails = ();
 
-    if ($self->{'notifyError'})
-    {
-        for my $r (0 .. $#error)
-        {
-            push(@toEmails, @error[$r]);
-        }
-    }
+    push(@toEmails, @error) if ($self->{'notifyError'});
+    push(@toEmails, @success) if ($self->{'notifySuccess'});
+    push(@toEmails, @additionalEmails);
 
-    if ($self->{'notifySuccess'})
-    {
-        for my $r (0 .. $#success)
-        {
-            push(@toEmails, @success[$r]);
-        }
+    @toEmails = @{deDupeEmailArray($self, \@toEmails)};
 
-    }
-    for my $r (0 .. $#additionalEmails)
-    {
-
-        push(@toEmails, @additionalEmails[$r]);
-    }
     my %alreadyEmailed;
 
-    #print Dumper(@toEmails);
     foreach (@toEmails)
     {
         if (!$alreadyEmailed{$_})
@@ -143,6 +125,7 @@ sub sendWithAttachments #subject, body, @attachments
             $message->send;
         }
     }
+
 }
 
 sub deDupeEmailArray
@@ -154,6 +137,7 @@ sub deDupeEmailArray
     my %bareEmails = ();
     my $pos = 0;
     my @ret = ();
+
     foreach (@emailArray)
     {
         my $thisEmail = $_;
@@ -183,6 +167,8 @@ sub deDupeEmailArray
         # just take the first occurance of the duplicate email
         push(@ret, @emailArray[ @a[0] ]);
     }
+
     return \@ret;
 }
+
 1;

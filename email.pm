@@ -21,12 +21,13 @@ use Data::Dumper;
 
 sub new
 {
-    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef ) = @_;
+    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag,
+        $confArrayRef )
+      = @_;
     my @a;
     my @b;
 
-    my $self =
-    {
+    my $self = {
         fromEmailAddress    => $from,
         emailRecipientArray => \@{$emailRecipientArrayRef},
         notifyError         => $errorFlag,                    #true/false
@@ -36,22 +37,21 @@ sub new
         successEmailList    => \@b
     };
 
-    my %varMap =
-    (
+    my %varMap = (
         "successemaillist" => 'successEmailList',
-        "erroremaillist" => 'errorEmailList'
+        "erroremaillist"   => 'errorEmailList'
     );
 
     my %conf = %{ $self->{confArray} };
 
     while ( ( my $confKey, my $selfKey ) = each(%varMap) )
     {
-        my @emailList = split( /,/, @conf{ $confKey } );
+        my @emailList = split( /,/, @conf{$confKey} );
         for my $y ( 0 .. $#emailList )
         {
             @emailList[$y] = trim( $self, @emailList[$y] );
         }
-        $self->{ $selfKey } = \@emailList;
+        $self->{$selfKey} = \@emailList;
     }
 
     bless $self, $class;
@@ -60,10 +60,10 @@ sub new
 
 sub send    #subject, body
 {
-    my $self             = shift;
-    my $subject          = shift;
-    my $body             = shift;
-    my @toEmails         = @{ getFinalToList($self) }
+    my $self     = shift;
+    my $subject  = shift;
+    my $body     = shift;
+    my @toEmails = @{ getFinalToList($self) };
 
     my $message = Email::MIME->create(
         header_str => [
@@ -87,19 +87,19 @@ sub send    #subject, body
 sub sendWithAttachments    #subject, body, @attachments
 {
     use Email::Stuffer;
-    my $self             = shift;
-    my $subject          = shift;
-    my $body             = shift;
-    my $attachmentRef    = shift;
-    my @attachments      = @{$attachmentRef};
-    my @toEmails         = @{ getFinalToList($self) }
+    my $self          = shift;
+    my $subject       = shift;
+    my $body          = shift;
+    my $attachmentRef = shift;
+    my @attachments   = @{$attachmentRef};
+    my @toEmails      = @{ getFinalToList($self) };
 
     foreach (@toEmails)
     {
         my $message = new Email::Stuffer;
 
         $message->to($_)->from( $self->{fromEmailAddress} )
-        ->text_body("$body\n")->subject($subject);
+          ->text_body("$body\n")->subject($subject);
 
         # attach the files
         $message->attach_file($_) foreach (@attachments);
@@ -122,10 +122,10 @@ sub getFinalToList
     push( @ret, @success ) if ( $self->{'notifySuccess'} );
 
     push( @ret, @additionalEmails ) if ( $#additionalEmails > -1 );
-    
+
     # Dedupe
     @ret = @{ deDupeEmailArray( $self, \@ret ) };
-    
+
     return \@ret;
 }
 

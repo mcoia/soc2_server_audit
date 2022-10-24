@@ -36,21 +36,23 @@ sub new
         successEmailList    => \@b
     };
 
-    my %theseemails = %{ $self->{confArray} };
+    my %varMap =
+    (
+        "successemaillist" => 'successEmailList',
+        "erroremaillist" => 'errorEmailList'
+    );
 
-    my @emails = split( /,/, @theseemails{"successemaillist"} );
-    for my $y ( 0 .. $#emails )
-    {
-        @emails[$y] = trim( $self, @emails[$y] );
-    }
-    $self->{successEmailList} = \@emails;
+    my %conf = %{ $self->{confArray} };
 
-    my @emails2 = split( /,/, @theseemails{"erroremaillist"} );
-    for my $y ( 0 .. $#emails2 )
+    while ( ( my $confKey, my $selfKey ) = each(%varMap) )
     {
-        @emails2[$y] = trim( $self, @emails2[$y] );
+        my @emailList = split( /,/, @conf{ $confKey } );
+        for my $y ( 0 .. $#emailList )
+        {
+            @emailList[$y] = trim( $self, @emailList[$y] );
+        }
+        $self->{ $selfKey } = \@emailList;
     }
-    $self->{errorEmailList} = \@emails2;
 
     bless $self, $class;
     return $self;
@@ -61,19 +63,7 @@ sub send    #subject, body
     my $self             = shift;
     my $subject          = shift;
     my $body             = shift;
-    my @additionalEmails = @{ $self->{emailRecipientArray} };
-    my @success          = @{ $self->{successEmailList} };
-    my @error            = @{ $self->{errorEmailList} };
-    my @toEmails         = ();
-
-    push( @toEmails, @error ) if ( $self->{'notifyError'} );
-
-    push( @toEmails, @success ) if ( $self->{'notifySuccess'} );
-
-    push( @toEmails, @additionalEmails ) if ( $#additionalEmails > -1 );
-
-    # Dedupe
-    @toEmails = @{ deDupeEmailArray( $self, \@toEmails ) };
+    my @toEmails         = @{ getFinalToList($self) }
 
     my $message = Email::MIME->create(
         header_str => [
@@ -102,26 +92,14 @@ sub sendWithAttachments    #subject, body, @attachments
     my $body             = shift;
     my $attachmentRef    = shift;
     my @attachments      = @{$attachmentRef};
-    my @additionalEmails = @{ $self->{emailRecipientArray} };
-    my @success          = @{ $self->{successEmailList} };
-    my @error            = @{ $self->{errorEmailList} };
-    my @toEmails         = ();
-
-    push( @toEmails, @error ) if ( $self->{'notifyError'} );
-
-    push( @toEmails, @success ) if ( $self->{'notifySuccess'} );
-
-    push( @toEmails, @additionalEmails ) if ( $#additionalEmails > -1 );
-
-    # Dedupe
-    @toEmails = @{ deDupeEmailArray( $self, \@toEmails ) };
+    my @toEmails         = @{ getFinalToList($self) }
 
     foreach (@toEmails)
     {
         my $message = new Email::Stuffer;
 
         $message->to($_)->from( $self->{fromEmailAddress} )
-          ->text_body("$body\n")->subject($subject);
+        ->text_body("$body\n")->subject($subject);
 
         # attach the files
         $message->attach_file($_) foreach (@attachments);
@@ -129,6 +107,26 @@ sub sendWithAttachments    #subject, body, @attachments
         $message->send;
     }
 
+}
+
+sub getFinalToList
+{
+    my $self             = shift;
+    my @additionalEmails = @{ $self->{emailRecipientArray} };
+    my @success          = @{ $self->{successEmailList} };
+    my @error            = @{ $self->{errorEmailList} };
+    my @ret              = ();
+
+    push( @ret, @error ) if ( $self->{'notifyError'} );
+
+    push( @ret, @success ) if ( $self->{'notifySuccess'} );
+
+    push( @ret, @additionalEmails ) if ( $#additionalEmails > -1 );
+    
+    # Dedupe
+    @ret = @{ deDupeEmailArray( $self, \@ret ) };
+    
+    return \@ret;
 }
 
 sub deDupeEmailArray

@@ -13,35 +13,34 @@ package email;
 use Email::MIME;
 use Data::Dumper;
 
-sub new
-{
-    my ($class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef) = shift;
+sub new {
+    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag,
+        $confArrayRef )
+      = @_;
     my @a;
     my @b;
 
     my $self = {
         fromEmailAddress    => $from,
         emailRecipientArray => \@{$emailRecipientArrayRef},
-        notifyError         => $errorFlag, #true/false
-        notifySuccess       => $successFlag, #true/false
+        notifyError         => $errorFlag,                    #true/false
+        notifySuccess       => $successFlag,                  #true/false
         confArray           => \%{$confArrayRef},
         errorEmailList      => \@a,
         successEmailList    => \@b
     };
 
-    my %theseemails = %{$self->{confArray}};
+    my %theseemails = %{ $self->{confArray} };
 
-    my @emails = split(/,/, @theseemails{"successemaillist"});
-    for my $y (0 .. $#emails)
-    {
-        @emails[$y] = trim($self, @emails[$y]);
+    my @emails = split( /,/, @theseemails{"successemaillist"} );
+    for my $y ( 0 .. $#emails ) {
+        @emails[$y] = trim( $self, @emails[$y] );
     }
     $self->{successEmailList} = \@emails;
 
-    my @emails2 = split(/,/, @theseemails{"erroremaillist"});
-    for my $y (0 .. $#emails2)
-    {
-        @emails2[$y] = trim($self, @emails2[$y]);
+    my @emails2 = split( /,/, @theseemails{"erroremaillist"} );
+    for my $y ( 0 .. $#emails2 ) {
+        @emails2[$y] = trim( $self, @emails2[$y] );
     }
     $self->{errorEmailList} = \@emails2;
 
@@ -49,36 +48,36 @@ sub new
     return $self;
 }
 
-sub send #subject, body
+sub send    #subject, body
 {
-    my $self = shift;
-    my $subject = shift;
-    my $body = shift;
-    my @additionalEmails = @{$self->{emailRecipientArray}};
-    my @success = @{$self->{successEmailList}};
-    my @error = @{$self->{errorEmailList}};
-    my @toEmails = ();
+    my $self             = shift;
+    my $subject          = shift;
+    my $body             = shift;
+    my @additionalEmails = @{ $self->{emailRecipientArray} };
+    my @success          = @{ $self->{successEmailList} };
+    my @error            = @{ $self->{errorEmailList} };
+    my @toEmails         = ();
 
-    push(@toEmails, @error) if ($self->{'notifyError'});
+    push( @toEmails, @error ) if ( $self->{'notifyError'} );
 
-    push(@toEmails, @success) if ($self->{'notifySuccess'});
+    push( @toEmails, @success ) if ( $self->{'notifySuccess'} );
 
-    push(@toEmails, @additionalEmails) if ($#additionalEmails > -1);
+    push( @toEmails, @additionalEmails ) if ( $#additionalEmails > -1 );
 
     # Dedupe
-    @toEmails = @{deDupeEmailArray($self, \@toEmails)};
+    @toEmails = @{ deDupeEmailArray( $self, \@toEmails ) };
 
     my $message = Email::MIME->create(
         header_str => [
             From    => $self->{fromEmailAddress},
-            To      => [ @toEmails ],
+            To      => [@toEmails],
             Subject => $subject
         ],
         attributes => {
             encoding => 'quoted-printable',
             charset  => 'ISO-8859-1',
         },
-        body_str   => "$body\n"
+        body_str => "$body\n"
     );
 
     use Email::Sender::Simple qw(sendmail);
@@ -87,34 +86,33 @@ sub send #subject, body
 
 }
 
-sub sendWithAttachments #subject, body, @attachments
+sub sendWithAttachments    #subject, body, @attachments
 {
     use Email::Stuffer;
-    my $self = shift;
-    my $subject = shift;
-    my $body = shift;
-    my $attachmentRef = shift;
-    my @attachments = @{$attachmentRef};
-    my @additionalEmails = @{$self->{emailRecipientArray}};
-    my @success = @{$self->{successEmailList}};
-    my @error = @{$self->{errorEmailList}};
-    my @toEmails = ();
+    my $self             = shift;
+    my $subject          = shift;
+    my $body             = shift;
+    my $attachmentRef    = shift;
+    my @attachments      = @{$attachmentRef};
+    my @additionalEmails = @{ $self->{emailRecipientArray} };
+    my @success          = @{ $self->{successEmailList} };
+    my @error            = @{ $self->{errorEmailList} };
+    my @toEmails         = ();
 
-    push(@toEmails, @error) if ($self->{'notifyError'});
+    push( @toEmails, @error ) if ( $self->{'notifyError'} );
 
-    push(@toEmails, @success) if ($self->{'notifySuccess'});
+    push( @toEmails, @success ) if ( $self->{'notifySuccess'} );
 
-    push(@toEmails, @additionalEmails) if ($#additionalEmails > -1);
+    push( @toEmails, @additionalEmails ) if ( $#additionalEmails > -1 );
 
     # Dedupe
-    @toEmails = @{deDupeEmailArray($self, \@toEmails)};
+    @toEmails = @{ deDupeEmailArray( $self, \@toEmails ) };
 
-    foreach (@toEmails)
-    {
+    foreach (@toEmails) {
         my $message = new Email::Stuffer;
 
-        $message->to($_)->from($self->{fromEmailAddress})
-            ->text_body("$body\n")->subject($subject);
+        $message->to($_)->from( $self->{fromEmailAddress} )
+          ->text_body("$body\n")->subject($subject);
 
         # attach the files
         $message->attach_file($_) foreach (@attachments);
@@ -124,52 +122,47 @@ sub sendWithAttachments #subject, body, @attachments
 
 }
 
-sub deDupeEmailArray
-{
-    my $self = shift;
+sub deDupeEmailArray {
+    my $self          = shift;
     my $emailArrayRef = shift;
-    my @emailArray = @{$emailArrayRef};
-    my %posTracker = ();
-    my %bareEmails = ();
-    my $pos = 0;
-    my @ret = ();
+    my @emailArray    = @{$emailArrayRef};
+    my %posTracker    = ();
+    my %bareEmails    = ();
+    my $pos           = 0;
+    my @ret           = ();
 
-    foreach (@emailArray)
-    {
+    foreach (@emailArray) {
         my $thisEmail = $_;
 
-        # if the email address is expressed with a display name, strip it to just the email address
-        $thisEmail =~ s/^[^<]*<([^>]*)>$/$1/g if ($thisEmail =~ m/</);
+# if the email address is expressed with a display name, strip it to just the email address
+        $thisEmail =~ s/^[^<]*<([^>]*)>$/$1/g if ( $thisEmail =~ m/</ );
 
         # lowercase it
         $thisEmail = lc $thisEmail;
 
         # Trim the spaces
-        $thisEmail = trim($self, $thisEmail);
+        $thisEmail = trim( $self, $thisEmail );
 
         $bareEmails{$thisEmail} = 1;
-        if (!$postTracker{$thisEmail})
-        {
+        if ( !$postTracker{$thisEmail} ) {
             my @a = ();
             $postTracker{$thisEmail} = \@a;
         }
-        push(@{$postTracker{$thisEmail}}, $pos);
+        push( @{ $postTracker{$thisEmail} }, $pos );
         $pos++;
     }
-    while ((my $email, my $value) = each(%bareEmails))
-    {
-        my @a = @{$postTracker{$email}};
+    while ( ( my $email, my $value ) = each(%bareEmails) ) {
+        my @a = @{ $postTracker{$email} };
 
         # just take the first occurance of the duplicate email
-        push(@ret, @emailArray[ @a[0] ]);
+        push( @ret, @emailArray[ @a[0] ] );
     }
 
     return \@ret;
 }
 
-sub trim
-{
-    my $self = shift;
+sub trim {
+    my $self   = shift;
     my $string = shift;
     $string =~ s/^\s+//;
     $string =~ s/\s+$//;

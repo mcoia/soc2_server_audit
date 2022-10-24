@@ -11,9 +11,7 @@
 package email;
 
 use Email::MIME;
-use Email::Stuffer;
 use Data::Dumper;
-use Mobiusutil;
 
 sub new
 {
@@ -31,20 +29,19 @@ sub new
         successEmailList    => \@b
     };
 
-    my $mobUtil = new Mobiusutil();
     my %theseemails = %{$self->{confArray}};
 
     my @emails = split(/,/, @theseemails{"successemaillist"});
     for my $y (0 .. $#emails)
     {
-        @emails[$y] = $mobUtil->trim(@emails[$y]);
+        @emails[$y] = trim($self, @emails[$y]);
     }
     $self->{successEmailList} = \@emails;
 
     my @emails2 = split(/,/, @theseemails{"erroremaillist"});
     for my $y (0 .. $#emails2)
     {
-        @emails2[$y] = $mobUtil->trim(@emails2[$y]);
+        @emails2[$y] = trim($self, @emails2[$y]);
     }
     $self->{errorEmailList} = \@emails2;
 
@@ -93,6 +90,7 @@ sub send #subject, body
 
 sub sendWithAttachments #subject, body, @attachments
 {
+    use Email::Stuffer;
     my $self = @_[0];
     my $subject = @_[1];
     my $body = @_[2];
@@ -146,8 +144,8 @@ sub deDupeEmailArray
         $thisEmail = lc $thisEmail;
 
         # Trim the spaces
-        $thisEmail =~ s/^\s*//g;
-        $thisEmail =~ s/\s*$//g;
+        $thisEmail =trim($self, $thisEmail);
+
         $bareEmails{$thisEmail} = 1;
         if (!$postTracker{$thisEmail})
         {
@@ -166,6 +164,15 @@ sub deDupeEmailArray
     }
 
     return \@ret;
+}
+
+sub trim
+{
+    my $self = shift;
+    my $string = shift;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    return $string;
 }
 
 1;

@@ -15,16 +15,16 @@ use Data::Dumper;
 
 sub new
 {
-    my $class = @_[0];
+    my ($class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef) = shift;
     my @a;
     my @b;
 
     my $self = {
-        fromEmailAddress    => @_[1],
-        emailRecipientArray => \@{@_[2]},
-        notifyError         => @_[3], #true/false
-        notifySuccess       => @_[4], #true/false
-        confArray           => \%{@_[5]},
+        fromEmailAddress    => $from,
+        emailRecipientArray => \@{$emailRecipientArrayRef},
+        notifyError         => $errorFlag, #true/false
+        notifySuccess       => $successFlag, #true/false
+        confArray           => \%{$confArrayRef},
         errorEmailList      => \@a,
         successEmailList    => \@b
     };
@@ -51,10 +51,9 @@ sub new
 
 sub send #subject, body
 {
-    my $self = @_[0];
-    my $subject = @_[1];
-    my $body = @_[2];
-    my $log = $self->{'log'};
+    my $self = shift;
+    my $subject = shift;
+    my $body = shift;
     my @additionalEmails = @{$self->{emailRecipientArray}};
     my @success = @{$self->{successEmailList}};
     my @error = @{$self->{errorEmailList}};
@@ -91,10 +90,11 @@ sub send #subject, body
 sub sendWithAttachments #subject, body, @attachments
 {
     use Email::Stuffer;
-    my $self = @_[0];
-    my $subject = @_[1];
-    my $body = @_[2];
-    my @attachments = @{@_[3]};
+    my $self = shift;
+    my $subject = shift;
+    my $body = shift;
+    my $attachmentRef = shift;
+    my @attachments = @{$attachmentRef};
     my @additionalEmails = @{$self->{emailRecipientArray}};
     my @success = @{$self->{successEmailList}};
     my @error = @{$self->{errorEmailList}};

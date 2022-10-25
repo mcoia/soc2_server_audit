@@ -21,17 +21,19 @@ use Data::Dumper;
 
 sub new
 {
-    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef ) = @_;
+    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef, $debug ) = @_;
 
     my $self = {
         fromEmailAddress    => $from,
         emailRecipientArray => $emailRecipientArrayRef,
         notifyError         => $errorFlag,                    #true/false
         notifySuccess       => $successFlag,                  #true/false
-        confArray           => $confArrayRef
+        confArray           => $confArrayRef,
+        debug               => $debug
     };
 
-    $self->{finalToEmailList} = _getFinalToList($self);
+    _setupFinalToList($self);
+
     bless $self, $class;
     return $self;
 }
@@ -57,7 +59,11 @@ sub send    #subject, body
 
     use Email::Sender::Simple qw(sendmail);
 
+    _reportSummary($self, $subject, $body);
+
     sendmail($message);
+
+    print "Sent\n" if $self->{debug};
 }
 
 sub sendWithAttachments    #subject, body, @attachments
@@ -75,14 +81,22 @@ sub sendWithAttachments    #subject, body, @attachments
 
         $message->to($_)->from( $self->{fromEmailAddress} )->text_body($body)->subject($subject);
 
+        if $self->{debug}
+        {
+            print "Attaching: '$_'\n" foreach (@attachments);
+        }
+
         # attach the files
         $message->attach_file($_) foreach (@attachments);
 
+        print "Sending with attachments\n" if $self->{debug};
+        _reportSummary($self, $subject, $body);
         $message->send;
+        print "Sent\n" if $self->{debug};
     }
 }
 
-sub _getFinalToList
+sub _setupFinalToList
 {
     my $self = shift;
     my @ret  = ();
@@ -99,6 +113,7 @@ sub _getFinalToList
             @emailList[$y] = _trim( @emailList[$y] );
         }
         $self->{$_} = \@emailList;
+        print "$_:\n" . Dumper(\@emailList) if $self->{debug};
     }
 
     undef @varMap;
@@ -109,10 +124,14 @@ sub _getFinalToList
 
     push( @ret, @{ $self->{erroremaillist} } ) if ( $self->{'notifyError'} );
 
+    print "pre dedupe:\n" . Dumper(\@ret) if $self->{debug};
+
     # Dedupe
     @ret = @{ _deDupeEmailArray( $self, \@ret ) };
 
-    return \@ret;
+    print "post dedupe:\n" . Dumper(\@ret) if $self->{debug};
+
+    $self->{finalToEmailList} = \@ret;
 }
 
 sub _deDupeEmailArray
@@ -129,6 +148,8 @@ sub _deDupeEmailArray
     {
         my $thisEmail = $_;
 
+        print "processing: '$thisEmail'\n" if $self->{debug};
+
         # if the email address is expressed with a display name, 
         # strip it to just the email address
         $thisEmail =~ s/^[^<]*<([^>]*)>$/$1/g if ( $thisEmail =~ m/</ );
@@ -139,11 +160,18 @@ sub _deDupeEmailArray
         # Trim the spaces
         $thisEmail = _trim( $thisEmail );
 
+        print "normalized: '$thisEmail'\n" if $self->{debug};
+
         $bareEmails{$thisEmail} = 1;
         if ( !$posTracker{$thisEmail} )
         {
             my @a = ();
             $posTracker{$thisEmail} = \@a;
+            print "adding: '$thisEmail'\n" if $self->{debug};
+        }
+        else
+        {
+            print "deduped: '$thisEmail'\n" if $self->{debug};
         }
         push( @{ $posTracker{$thisEmail} }, $pos );
         $pos++;
@@ -157,6 +185,26 @@ sub _deDupeEmailArray
     }
 
     return \@ret;
+}
+
+sub _reportSummary
+{
+    my $self = shift;
+    my $subject = shift;
+    my $body = shift;
+    my $characters = length( $body );
+    my @lines = split( /\n/, $body );
+    my $bodySize = $characters / 1024 / 1024;
+    print "From: " . $self->{fromEmailAddress} ."\n";
+    print "To: ";
+    print "$_, "foreach( @{$self->{finalToEmailList}} );
+    print "\n";
+    print "Subject: $subject\n";
+    print "== BODY ==\n";
+    print "$characters characters\n";
+    print scalar (@lines) . " lines\n";
+    print $bodySize . "MB\n";
+    print "== BODY ==\n";
 }
 
 sub _trim

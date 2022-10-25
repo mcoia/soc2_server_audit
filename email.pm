@@ -119,11 +119,9 @@ sub _setupFinalToList
 
     undef @varMap;
 
-    push( @ret, @{ $self->{emailRecipientArray} } )
-      if ( $self->{emailRecipientArray}->[0] );
+    push( @ret, @{ $self->{emailRecipientArray} } ) if ( $self->{emailRecipientArray}->[0] );
 
-    push( @ret, @{ $self->{successemaillist} } )
-      if ( $self->{'notifySuccess'} );
+    push( @ret, @{ $self->{successemaillist} } ) if ( $self->{'notifySuccess'} );
 
     push( @ret, @{ $self->{erroremaillist} } ) if ( $self->{'notifyError'} );
 

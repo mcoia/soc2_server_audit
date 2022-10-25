@@ -21,9 +21,7 @@ use Data::Dumper;
 
 sub new
 {
-    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag,
-        $confArrayRef, $debug )
-      = @_;
+    my ( $class, $from, $emailRecipientArrayRef, $errorFlag, $successFlag, $confArrayRef, $debug ) = @_;
 
     my $self = {
         fromEmailAddress    => $from,
@@ -81,8 +79,7 @@ sub sendWithAttachments    #subject, body, @attachments
     {
         my $message = new Email::Stuffer;
 
-        $message->to($_)->from( $self->{fromEmailAddress} )->text_body($body)
-          ->subject($subject);
+        $message->to($_)->from( $self->{fromEmailAddress} )->text_body($body)->subject($subject);
 
         if ( $self->{debug} )
         {
@@ -93,7 +90,8 @@ sub sendWithAttachments    #subject, body, @attachments
         $message->attach_file($_) foreach (@attachments);
 
         print "Sending with attachments\n" if $self->{debug};
-        _reportSummary( $self, $subject, $body );
+        _reportSummary( $self, $subject, $body, \@attachments );
+        print "\n";
         $message->send;
         print "Sent\n" if $self->{debug};
     }
@@ -194,12 +192,18 @@ sub _deDupeEmailArray
 
 sub _reportSummary
 {
-    my $self       = shift;
-    my $subject    = shift;
-    my $body       = shift;
+    my $self          = shift;
+    my $subject       = shift;
+    my $body          = shift;
+    my $attachmentRef = shift;
+    my @attachments   = ();
+    @attachments = @{$attachmentRef} if ( ref($attachmentRef) eq 'ARRAY' );
+
     my $characters = length($body);
     my @lines      = split( /\n/, $body );
     my $bodySize   = $characters / 1024 / 1024;
+
+    print "\n";
     print "From: " . $self->{fromEmailAddress} . "\n";
     print "To: ";
     print "$_, " foreach ( @{ $self->{finalToEmailList} } );
@@ -210,11 +214,37 @@ sub _reportSummary
     print scalar(@lines) . " lines\n";
     print $bodySize . "MB\n";
     print "== BODY ==\n";
+
+    my $fileSizeTotal = 0;
+    if ( $#attachments > -1 )
+    {
+        print "== ATTACHMENT SUMMARY == \n";
+
+        foreach (@attachments)
+        {
+            $fileSizeTotal += -s $_;
+            my $thisFileSize = ( -s $_ ) / 1024 / 1024;
+            print "$_: ";
+            printf( "%.3f", $thisFileSize );
+            print "MB\n";
+
+        }
+        $fileSizeTotal = $fileSizeTotal / 1024 / 1024;
+
+        print "Total Attachment size: ";
+        printf( "%.3f", $fileSizeTotal );
+        print "MB\n";
+        print "== ATTACHMENT SUMMARY == \n";
+    }
+
+    $fileSizeTotal += $bodySize;
+    print "!!!WARNING!!! Email (w/attachments) Exceeds Standard 25MB\n" if ( $fileSizeTotal > 25 );
+    print "\n";
+
 }
 
 sub _trim
 {
-    my $self   = shift;
     my $string = shift;
     $string =~ s/^\s+//;
     $string =~ s/\s+$//;

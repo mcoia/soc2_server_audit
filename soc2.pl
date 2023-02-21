@@ -241,7 +241,7 @@ sub runReports
             my @s = ();
             $serverDictionary{$importantReportName}{$importantReportName}{"herenow"} = \@s if ( (!$serverDictionary{"Servers Appearance / Disappearance"}{"Servers Appearance / Disappearance"}{"herenow"}) && (length($itemsNow) > 0) );
             my @s2 = ();
-            $serverDictionary{$importantReportName}{$importantReportName}{"notherenow"} = \@s2 if ( (!$serverDictionary{"Servers Appearance / Disappearance"}{"Servers Appearance / Disappearance"}{"herenow"}) && (length($itemsBefore) > 0) );
+            $serverDictionary{$importantReportName}{$importantReportName}{"notherenow"} = \@s2 if ( (!$serverDictionary{"Servers Appearance / Disappearance"}{"Servers Appearance / Disappearance"}{"notherenow"}) && (length($itemsBefore) > 0) );
             $wholeServerChanges = "" . $itemsNow . $itemsBefore;
 
             %serverDictionary = %{pushValueIntoBuriedArray(\%serverDictionary, $importantReportName, $importantReportName, "herenow", $itemsNow)} if(length($itemsNow) > 0);

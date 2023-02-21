@@ -36,6 +36,13 @@ The server that this runs on will need at a minimum:
   - File::Copy
 - SSH keys setup to each destination server
 
+You can use the included ansible setup script to automate the installation of the perl modules
+
+```
+
+$ sudo ansible-playbook setup_playbook.yml
+
+```
 ## Getting started
 
 - Decide on a place to have the software run

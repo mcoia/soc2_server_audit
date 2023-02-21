@@ -27,7 +27,6 @@ use email;
 use DateTime;
 use utf8;
 use Encode;
-use DateTime;
 use DateTime::Format::Duration;
 use Getopt::Long;
 use JSON;

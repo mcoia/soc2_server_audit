@@ -1,0 +1,59 @@
+---
+
+- hosts: localhost
+  connection: local
+  become_method: sudo
+  tasks:
+
+  - name: Installing CPAN packages DBD::Pg
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "DBD::Pg"'
+
+  - name: Installing CPAN packages Email::MIME
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "Email::MIME"'
+
+  - name: Installing CPAN packages Email::Sender::Simple
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "Email::Sender::Simple"'
+
+  - name: Installing CPAN packages DateTime
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "DateTime"'
+
+  - name: Installing CPAN packages DateTime::Format::Duration
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "DateTime::Format::Duration"'
+
+  - name: Installing CPAN packages Encode
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "Encode"'
+
+  - name: Installing CPAN packages Getopt::Long
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "Getopt::Long"'
+
+  - name: Installing CPAN packages JSON
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "JSON"'
+
+  - name: Installing CPAN packages utf8
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "utf8"'
+
+  - name: Installing CPAN packages Email::Stuffer
+    become: true
+    ignore_errors: yes
+    shell: export PERL_MM_USE_DEFAULT=1 && perl -MCPAN -e 'install "Email::Stuffer"'
+
+
+...

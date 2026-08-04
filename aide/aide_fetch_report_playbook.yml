@@ -181,6 +181,7 @@
   - name: INIT AIDE /etc/cron.daily/aide mode=a-x
     become: true
     file: dest=/etc/cron.daily/aide mode=a-x
+    ignore_errors: yes
     when: ansible_distribution == 'Ubuntu'
 
   - name: INIT AIDE path=/etc/aide mode=a-x state=directory recurse=yes
@@ -194,11 +195,15 @@
 
   - name: REMOVE '^database=' LINE
     become: true
-    lineinfile: "dest=/etc/aide.conf state=absent regexp='^database='"
-   
-  - name: ADD 'database=' LINE
+    lineinfile: "dest=/etc/aide.conf state=absent regexp='^databas
+
+  - name: REMOVE '^database_in=' LINE
     become: true
-    lineinfile: "dest=/etc/aide.conf state=present insertbefore='^database' line='database=file:{{ aide }}/aide.db.{{ date }}'"
+    lineinfile: "dest=/etc/aide.conf state=absent regexp='^database_in='"
+   
+  - name: ADD 'database_in=' LINE
+    become: true
+    lineinfile: "dest=/etc/aide.conf state=present insertbefore='^database' line='database_in=file:{{ aide }}/aide.db.{{ date }}'"
 
   - name: CHECK INITIALIZED 
     become: true

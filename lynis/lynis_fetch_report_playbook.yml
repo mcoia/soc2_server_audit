@@ -116,7 +116,13 @@
     register: lynis_result
 
   - name: COPY REPORT 3
-    become: yes
-    local_action: copy content={{ lynis_result.stdout_lines }} dest={{lynis_report_local_destination}}/{{ host }}.{{ this_host.stdout_lines | regex_replace('[\[\]"]','') | regex_replace("[']",'') | regex_replace("^u",'') }}.txt
+    local_action: >
+      shell
+      find '{{ lynis_report_local_destination }}/for_humans/{{ host }}' -name '*.txt'
+      -exec cp {} '{{lynis_report_local_destination}}/{{ host
+       | regex_replace('\/','.')
+       }}.{{ host
+       | regex_replace('\/','.')
+       }}.txt' \;
 
 ...

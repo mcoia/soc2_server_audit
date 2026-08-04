@@ -111,14 +111,9 @@
       dest: "{{ lynis_report_local_destination }}/for_humans/{{ host }}"
 
   - name: COPY REPORT 2
-    become: yes
-    shell: cat {{lynis_report_file}}
-    register: lynis_result
-
-  - name: COPY REPORT 3
     local_action: >
       shell
-      find '{{ lynis_report_local_destination }}/for_humans/{{ host }}' -name '*.txt'
+      find '{{ lynis_report_local_destination }}/for_humans/{{ host }}' -type f -name '*.txt'
       -exec cp {} '{{lynis_report_local_destination}}/{{ host
        | regex_replace('\/','.')
        }}.{{ host

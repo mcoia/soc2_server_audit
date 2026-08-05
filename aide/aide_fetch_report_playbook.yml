@@ -195,12 +195,12 @@
 
   - name: REMOVE '^database=' LINE
     become: true
-    lineinfile: "dest=/etc/aide.conf state=absent regexp='^databas
+    lineinfile: "dest=/etc/aide.conf state=absent regexp='^database='"
 
   - name: REMOVE '^database_in=' LINE
     become: true
     lineinfile: "dest=/etc/aide.conf state=absent regexp='^database_in='"
-   
+
   - name: ADD 'database_in=' LINE
     become: true
     lineinfile: "dest=/etc/aide.conf state=present insertbefore='^database' line='database_in=file:{{ aide }}/aide.db.{{ date }}'"

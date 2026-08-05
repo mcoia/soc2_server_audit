@@ -114,10 +114,8 @@
     local_action: >
       shell
       find '{{ lynis_report_local_destination }}/for_humans/{{ host }}' -type f -name '*.txt'
-      -exec cp {} '{{lynis_report_local_destination}}/{{ host
-       | regex_replace('\/','.')
-       }}.{{ host
-       | regex_replace('\/','.')
-       }}.txt' \;
+      -exec cp {} '{{lynis_report_local_destination}}/{{ host |
+      regex_replace('\/','.') }}.{{ host |
+      regex_replace('\/','.') }}.txt' \;
 
 ...

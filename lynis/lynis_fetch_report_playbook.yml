@@ -7,7 +7,6 @@
 
 - hosts: all
   remote_user: "{{remote_user}}"
-  become: true
   become_method: sudo
   vars_files:
     - ../ansible_vars.yml
@@ -105,7 +104,7 @@
     when: ansible_distribution == 'CentOS' and ansible_distribution_major_version|int < 7
 
   - name: COPY REPORT 1
-    become: yes
+    become: true
     fetch:
       src: "{{ lynis_report_file }}"
       dest: "{{ lynis_report_local_destination }}/for_humans/{{ host }}"

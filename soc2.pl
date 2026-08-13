@@ -680,44 +680,36 @@ sub consumeLynis
     ## taking a gamble that it's the first line and only the first line with data.
     ## But its reliable because we wrote the ansible
 
-    my $insertPOS = 1;
     foreach(@lines)
     {
+	next if (length($_) < 3);
+	next if ($_ =~ /^#/);
         $log->addLine("consumeLynis: line=\n",Dumper($_)) if $debug;
-
-        # my $insertPOS = 1;
-        my @json  = @{decode_json($_)};
-        $log->addLine(Dumper(@json));
 
         my $insertQuery = "INSERT INTO soc2.report(rid,sid,key,value,job)\n VALUES\n";
         my @insertValues = ();
+        my $insertPOS = 1;
         my %fullKeys = ();
-        foreach (@json)
+        my $pair = $_;
+        my @keypair = split(/=/,$pair);
+        my $key = shift(@keypair);
+        my $value = join('=', @keypair);
+        my %finalKeyPairs = %{createKeyName($key,$value,\%fullKeys)};
+        while ( (my $ikey, my $ivalue) = each(%finalKeyPairs) )
         {
-            my $pair = $_;
-            my @keypair = split(/=/,$pair);
-            my $key = shift(@keypair);
-            my $value = join('=', @keypair);
-            my %finalKeyPairs = %{createKeyName($key,$value,\%fullKeys)};
-
-            while ( (my $ikey, my $ivalue) = each(%finalKeyPairs) )
-            {
-                $insertQuery.="(\$" . $insertPOS++ . ",\$" . $insertPOS++ . ",\$" . $insertPOS++ . ",\$" . $insertPOS++ . ",\$" . $insertPOS++ . "),\n";
-                push (@insertValues,($reportid,$serverid,$ikey,$ivalue,$jobid));
-                $fullKeys{$ikey} = 1;
-            }
+            $insertQuery.="(\$" . $insertPOS++ . ",\$" . $insertPOS++ . ",\$" . $insertPOS++ . ",\$" . $insertPOS++ . ",\$" . $insertPOS++ . "),\n";
+             push (@insertValues,($reportid,$serverid,$ikey,$ivalue,$jobid));
+             $fullKeys{$ikey} = 1;
         }
 
         if($insertPOS > 1)  ## There was data, we need to push it to the database
-        {
+	{
             $insertQuery = substr($insertQuery, 0, -2);
             $log->addLine("consumeLynis: values=\n".Dumper(@insertValues)) if $debug;
             updateJob("consumeLynis",$insertQuery);
             $dbHandler->updateWithParameters($insertQuery,\@insertValues);
         }
 
-        ## Only one line on these files. Might as well go last (should be the last line anyways)
-        last;
     }
 }
 
